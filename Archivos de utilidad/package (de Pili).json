@@ -1,0 +1,15 @@
+{
+  "name": "proyectologs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "Log2var.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fs": "0.0.1-security",
+    "line-reader": "^0.4.0"
+  }
+}
