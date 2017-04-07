@@ -84,20 +84,22 @@
 		// If you wish to keep the size of your app but render it at a lower resolution, you can do so by calling setSize with false as updateStyle (the third argument). For example, setSize(window.innerWidth/2, window.innerHeight/2, false) will render your app at half resolution, given that your <canvas> has 100% width and height.
 		document.body.appendChild( renderer.domElement );
 
-		// BUCLE SIN TERMINAR!!
-		var a = 0;
+		// Dentro de la función render creamos un algoritmo para validar que el dato representado corresponde al último instante con log.
+		var a = 0,
+		    j = 0,
+		    t0 = bla.AHR2(j).UStime; // tomamos el tiempo inicial del log como referencia 'cero'
+
 		function render() {
 			requestAnimationFrame( render );
 			cube.rotation.y += 0.01;
 			cube2.rotation.y += -0.02;
 
-			if (a == 0){ THREE.Clock }
-			j = 0;
+			if (a == 0){ THREE.Clock ; a = 1 } // primer frame del renderizado, comienza el reloj
 
-			for (i = 0; i < ; i++) {
-				if (a == 0){ t0 = bla.AHR2(i).UStime; a = 1 } // fuera del bucle
+			for (i = j; i < bla.AHR2.lenght ; i++) {
 
-				if ( (bla.AHR2(j).UStime - t0) - Clock.elapsedTime > 0 ) {
+
+				if ( (bla.AHR2(i).UStime - t0) - Clock.elapsedTime > 0 ) {
 					j = i;
                 }
 
