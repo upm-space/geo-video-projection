@@ -84,36 +84,41 @@
 		// If you wish to keep the size of your app but render it at a lower resolution, you can do so by calling setSize with false as updateStyle (the third argument). For example, setSize(window.innerWidth/2, window.innerHeight/2, false) will render your app at half resolution, given that your <canvas> has 100% width and height.
 		document.body.appendChild( renderer.domElement );
 
+
 		// Dentro de la función render creamos un algoritmo para validar que el dato representado corresponde al último instante con log.
-		var a = 0,
-		    j = 0,
-		    t0 = bla.AHR2(j).UStime; // tomamos el tiempo inicial del log como referencia 'cero'
+		var a = 0, j = 0, bla = new Array, time = new Array,
+            t0 = 0; // = bla.AHR2(j).UStime; - tomamos el tiempo inicial del log como referencia 'cero'
+
+        for (i = 0; i < 1000; i++) {
+        	bla[i] = i/500;
+        	time[i] = i/100;
+        }
 
 		function render() {
 			requestAnimationFrame( render );
 			cube.rotation.y += 0.01;
 			cube2.rotation.y += -0.02;
 
-			if (a == 0){ THREE.Clock ; a = 1 } // primer frame del renderizado, comienza el reloj
+			if (a == 0){
+				THREE.Clock(autoStart) ;
+				a = 1;
+			} // primer frame del renderizado, comienza el reloj
 
-			for (i = j; i < bla.AHR2.lenght ; i++) {
+			reloj = THREE.Clock.getElapsedTime;
 
+			console.log( reloj );
 
-				if ( (bla.AHR2(i).UStime - t0) - Clock.elapsedTime > 0 ) {
-					j = i;
-                }
-
-				if (j not= i) {
-					;
-					break
+            if ( (time[j] - t0) - reloj < 0 ) {
+				if ((time[j + 1] - t0) - reloj >= 0) {
+					j++;
+					console.log('j = ' + j);
 				}
-            }
+			}
 
-			camera.position.x = bla.AHR2(j).Lng;
-			camera.position.y = bla.AHR2(j).Lat;
-			camera.position.x = bla.AHR2(j).Alt;
-
-			camera.lookAt( ground.position );
+            camera.position.x = bla[j];
+			/*camera.position.x = bla(j).Lng;
+			camera.position.y = bla(j).Lat;
+			camera.position.x = bla(j).Alt;*/
 
 			/*
 			if (a == 0) {
@@ -127,12 +132,13 @@
 					a = 0;
 				}
             }
+            camera.lookAt( ground.position );
+            console.log(cube2.rotation.x);
             */
 
-			// console.log(cube2.rotation.x);
 			renderer.render( scene, camera );
         }
-        // Bucle sin terminar!!
+
 
 		// Inicializamos el renderer. Con un IF-ELSE y el detector.js determinamos si se correrá con WebGL o el CanvasRenderer (menos avanzado).
 		if (Detector.webgl) {
