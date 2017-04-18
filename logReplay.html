@@ -86,7 +86,8 @@
 
 
 		// Dentro de la función render creamos un algoritmo para validar que el dato representado corresponde al último instante con log.
-		var a = 0, j = 0, bla = new Array, time = new Array,
+		var a = 0, j = 0,
+            bla = new Array, time = new Array,
             t0 = 0; // = bla.AHR2(j).UStime; - tomamos el tiempo inicial del log como referencia 'cero'
 
         for (i = 0; i < 1000; i++) {
@@ -100,11 +101,15 @@
 			cube2.rotation.y += -0.02;
 
 			if (a == 0){
-				THREE.Clock(autoStart) ;
+				var currTime = new Date();
+				renderStartTime = currTime.getTime();
 				a = 1;
 			} // primer frame del renderizado, comienza el reloj
 
-			reloj = THREE.Clock.getElapsedTime;
+			var currTime = new Date();
+			renderCurrentTime = currTime.getTime();
+
+			reloj = renderCurrentTime - renderStartTime ;
 
 			console.log( reloj );
 
