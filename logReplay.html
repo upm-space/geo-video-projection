@@ -85,40 +85,57 @@
 		document.body.appendChild( renderer.domElement );
 
 
-		// Dentro de la función render creamos un algoritmo para validar que el dato representado corresponde al último instante con log.
-		var a = 0, j = 0,
+		////////////////////////////////////////////////////////////////
+        // Estructura de representación en función de Array de datos. //
+        ////////////////////////////////////////////////////////////////
+		var a = 0, j = 0, renderTimeNow, renderTimeNext,
             bla = new Array, time = new Array,
             t0 = 0; // = bla.AHR2(j).UStime; - tomamos el tiempo inicial del log como referencia 'cero'
 
-        for (i = 0; i < 1000; i++) {
-        	bla[i] = i/500;
-        	time[i] = i/100;
+        for (i = 0; i < 10000; i++) {
+        	bla[i] = i/1000; // va de 0 a 10 (unidades de distancia)
+        	time[i] = i/100; // va de 0 a 100 (s)
         }
 
+        /////////////////////////////
+        // Script de renderización //
+        /////////////////////////////
 		function render() {
 			requestAnimationFrame( render );
 			cube.rotation.y += 0.01;
 			cube2.rotation.y += -0.02;
 
+            // Dentro de la función render creamos un algoritmo para validar que el dato representado corresponde al último instante con log.
 			if (a == 0){
 				var currTime = new Date();
 				renderStartTime = currTime.getTime();
 				a = 1;
 			} // primer frame del renderizado, comienza el reloj
-
 			var currTime = new Date();
 			renderCurrentTime = currTime.getTime();
+			reloj = (renderCurrentTime-renderStartTime)/1000 ; // (ms)
 
-			reloj = renderCurrentTime - renderStartTime ;
-
-			console.log( reloj );
-
-            if ( (time[j] - t0) - reloj < 0 ) {
-				if ((time[j + 1] - t0) - reloj >= 0) {
-					j++;
-					console.log('j = ' + j);
-				}
-			}
+            // Hacemos un algoritmo para garantizar que el tiempo transcurrido de renderizado coincide con el del log.
+            renderTimeNow = time[j]-t0;
+            renderTimeNext = time[j+1]-t0;
+            if ( renderTimeNow - reloj < 0 ) { // Casos A y B
+                if ( renderTimeNext - reloj < 0 ) { // Caso B
+                    while ( renderTimeNext - reloj < 0) {
+                        j++;
+                        renderTimeNext = time[j]-t0;
+                    }
+                }
+			} else { // Caso C
+                while ( renderTimeNow - reloj > 0 ){
+                    j--;
+                    renderTimeNow = time[j]-t0;
+                }
+            }
+            console.log("¡Todo está bien!");
+            console.log('j = ' + j);
+            console.log("TimeNow = " + renderTimeNow);
+            console.log("Reloj = " + reloj);
+            console.log("TimeNext = " + renderTimeNext);
 
             camera.position.x = bla[j];
 			/*camera.position.x = bla(j).Lng;
