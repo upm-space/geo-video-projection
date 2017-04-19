@@ -93,7 +93,7 @@
             t0 = 0; // = bla.AHR2(j).UStime; - tomamos el tiempo inicial del log como referencia 'cero'
 
         for (i = 0; i < 10000; i++) {
-        	bla[i] = i/1000; // va de 0 a 10 (unidades de distancia)
+        	bla[i] = i/10; // va de 0 a 10 (unidades de distancia)
         	time[i] = i/100; // va de 0 a 100 (s)
         }
 
@@ -136,27 +136,11 @@
             console.log("TimeNow = " + renderTimeNow);
             console.log("Reloj = " + reloj);
             console.log("TimeNext = " + renderTimeNext);
+            console.log("Cam.Position.X = " + camera.position.x);
+            console.log("Bla(j) = " + bla[j]);
 
             camera.position.x = bla[j];
-			/*camera.position.x = bla(j).Lng;
-			camera.position.y = bla(j).Lat;
-			camera.position.x = bla(j).Alt;*/
-
-			/*
-			if (a == 0) {
-				camera.position.x += 0.05;
-                if (camera.position.x > 9.95) {
-                	a = 1;
-                }
-            } else if ( a == 1 ) {
-				camera.position.x += -0.01;
-				if (camera.position.x < -0.95) {
-					a = 0;
-				}
-            }
             camera.lookAt( ground.position );
-            console.log(cube2.rotation.x);
-            */
 
 			renderer.render( scene, camera );
         }
