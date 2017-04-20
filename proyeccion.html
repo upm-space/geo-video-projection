@@ -33,7 +33,7 @@
             HCP=mydata.AHR2[j].Alt;
             omega=mydata.AHR2[j].Roll*Math.PI/180;
             phi=mydata.AHR2[j].Pitch*Math.PI/180;
-            kappa=mydata.AHR2[j].Yaw*Math.PI/180;
+            kappa=mydata.AHR2[j].Yaw;
 
             var result=obtainFootprints(xCP,yCP,HCP,hv,f,AnchSens,LargSens,omega,phi,kappa,rumbo);
             x1=result[0];
