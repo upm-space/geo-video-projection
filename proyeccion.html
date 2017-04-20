@@ -14,28 +14,21 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.4.3/proj4-src.js"></script>
 <script type="text/json" src="AHR2.json"></script>
 <script>
+    var xCP=0, yCP=0, HCP=0, hv=0, AnchSens=0.3, LargSens=0.5, f=0.1, omega=0, phi=0, kappa=0, rumbo=0;
+
     function obtainFootprints(xCP,yCP,altitude,hv,focal,AnchSens,LargSens,omega,phi,bearing,rumbo){
         return feedProjection(xCP,yCP,altitude,hv,focal,AnchSens,LargSens,omega,phi,bearing,rumbo);
     }
-
-    /*var data=$.getJSON( "AHR2.js", function( json ) {
-        console.log( "JSON Data: " + json.users[ 3 ].name );
-    });*/
 
     var mydata;
     var test = $.getJSON( "AHR2.json", function(datatest) {
         mydata=datatest;
         console.log(mydata.AHR2[0].Lng);
 
-        // Commented by @elgeografo. There is no need to parse mydata
-        //var ahr2 = JSON.parse(mydata);
-        var ahr2 = mydata;
-        //var mydata = AHR2.json;
-        var xCP=0, yCP=0, HCP=0, hv=0, AnchSens=0.3, LargSens=0.5, f=0.1, omega=0, phi=0, kappa=0, rumbo=0;
         var coordinates=[];
-        for (var j=0;j<3613;j++){
-            alert(mydata.AHR2[0].Lng);
-            //xCP=ahr2.AHR2[j].Lng;
+        //alert(mydata.AHR2[0].Lng);
+        for (var j=0;j<mydata.AHR2.length;j++){
+            xCP=mydata.AHR2[j].Lng;
             yCP=mydata.AHR2[j].Lat;
             HCP=mydata.AHR2[j].Alt;
             omega=mydata.AHR2[j].Roll*Math.PI/180;
@@ -43,17 +36,18 @@
             kappa=mydata.AHR2[j].Yaw*Math.PI/180;
 
             var result=obtainFootprints(xCP,yCP,HCP,hv,f,AnchSens,LargSens,omega,phi,kappa,rumbo);
-            coordinates.push(result);
-            document.getElementById("resultado").innerHTML += result+"\n";
+            x1=result[0];
+            y1=result[4];
+            x2=result[1];
+            y2=result[5];
+            x3=result[2];
+            y3=result[6];
+            x4=result[3];
+            y4=result[7];
+            coordinates=[x1,y1,x2,y2,x3,y3,x4,y4];
+            document.getElementById("resultado").innerHTML += coordinates+"\n";
         }
-        //document.getElementById("resultado").innerHTML += coordinates;
     })
-
-
-
-
-
-
 
     /**
     * @param xCP CoordenadaX del centroide
@@ -226,7 +220,8 @@
             points.forEach(function (point) {
                 if (point != null) {
                     var temp = proj4(utm,'EPSG:4326',[point[0][0],point[1][0]]);
-                    footprints2.push(temp);
+                    footprints2[i]=temp[0];
+                    footprints2[i+4]=temp[1];
                 }
                 i++;
             });
@@ -527,8 +522,7 @@
             return result;
         }
 
-
-        function multiplyMatrix(a, b) {
+    function multiplyMatrix(a, b) {
             var aNumRows = a.length, aNumCols = a[0].length,
                 bNumRows = b.length, bNumCols = b[0].length,
                 m = new Array(aNumRows);  // initialize array of rows
@@ -544,7 +538,7 @@
             return m;
         }
 
-        /*
+    /*
         function multiplyMatrix(matrixA, matrixB){
             var result = new Array();//declare an array
             var resu = new Array();
