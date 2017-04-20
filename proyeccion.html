@@ -26,29 +26,34 @@
     var test = $.getJSON( "AHR2.json", function(datatest) {
         mydata=datatest;
         console.log(mydata.AHR2[0].Lng);
+
+        // Commented by @elgeografo. There is no need to parse mydata
+        //var ahr2 = JSON.parse(mydata);
+        var ahr2 = mydata;
+        //var mydata = AHR2.json;
+        var xCP=0, yCP=0, HCP=0, hv=0, AnchSens=0.3, LargSens=0.5, f=0.1, omega=0, phi=0, kappa=0, rumbo=0;
+        var coordinates=[];
+        for (var j=0;j<3613;j++){
+            alert(mydata.AHR2[0].Lng);
+            //xCP=ahr2.AHR2[j].Lng;
+            yCP=mydata.AHR2[j].Lat;
+            HCP=mydata.AHR2[j].Alt;
+            omega=mydata.AHR2[j].Roll*Math.PI/180;
+            phi=mydata.AHR2[j].Pitch*Math.PI/180;
+            kappa=mydata.AHR2[j].Yaw*Math.PI/180;
+
+            var result=obtainFootprints(xCP,yCP,HCP,hv,f,AnchSens,LargSens,omega,phi,kappa,rumbo);
+            coordinates.push(result);
+            document.getElementById("resultado").innerHTML += result+"\n";
+        }
+        //document.getElementById("resultado").innerHTML += coordinates;
     })
 
 
-    var ahr2 = JSON.parse(mydata);
 
 
-    //var mydata = AHR2.json;
-    var xCP=0, yCP=0, HCP=0, hv=0, AnchSens=0.3, LargSens=0.5, f=0.1, omega=0, phi=0, kappa=0, rumbo=0;
-    var coordinates=[];
-    for (var j=0;j<3613;j++){
-        alert(mydata.AHR2[0][xCP].Lng);
-        //xCP=ahr2.AHR2[j].Lng;
-        yCP=mydata[AHR2][j].Lat;
-        HCP=mydata[AHR2][j].Alt;
-        omega=mydata[AHR2][j].Roll*Math.PI/180;
-        phi=mydata[AHR2][j].Pitch*Math.PI/180;
-        kappa=mydata[AHR2][j].Yaw*Math.PI/180;
 
-        var result=obtainFootprints(xCP,yCP,HCP,hv,f,AnchSens,LargSens,omega,phi,kappa,rumbo);
-        coordinates.push(result);
-        document.getElementById("resultado").innerHTML += result+"\n";
-    }
-    //document.getElementById("resultado").innerHTML += coordinates;
+
 
     /**
     * @param xCP CoordenadaX del centroide
