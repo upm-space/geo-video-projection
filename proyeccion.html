@@ -1,25 +1,58 @@
 <!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/html">
+
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>
+        Generación de log para logReplay y obtención de vértices de la proyección
+    </title>
 </head>
-<body>
 
-<p id="resultado"></p>
-<script
-        src="https://code.jquery.com/jquery-3.2.1.min.js"
+<body>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"
         integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
         crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.4.3/proj4-src.js"></script>
 <script type="text/json" src="AHR2.json"></script>
+
+<!--
+Utilizaremos los logs ya covertidos por el programa de Pili e Itxaso para la reproducción de vuelos.
+Para el feed en directo tendremos que construir un sistema de transferencia de metadatos.
+-->
+
+<!-- Este script abre el fichero del log y comprueba que el tiempo está en orden. -->
 <script>
+    var flightLogOrder = $.getJSON( "AHR2.json", function(dataOrder) {
+        mydata = dataOrder;
+        var timeStamp = new ArrayBuffer(mydata.AHR2.lenght),
+            cuentaDesorden = 0,
+            posicionesDesordenadas;
+
+        for (j=0 ; j < mydata.AHR2.length ; j++ ){
+            timeStamp[j] = mydata.AHR2[j].TimeUS;
+
+            for ( i=0 ; i < j ; i++ ){
+            	if ( timeStamp[i] > timeStamp[j] ) {
+					console.log("timeStamp["+i+"] = "+timeStamp[i]+"es mayor que timeStamp["+j+"] = " + timeStamp[j]);
+					posicionesDesordenadas[a] = [ j, i ]; // Luego se intercambiarán la posición i y j.
+					cuentaDesorden++;
+                }
+            }
+        }
+        console.log("Se ha completado el escaneo.");
+		console.log("Hay un total de "+cuentaDesorden+" posiciones desordenadas.");
+    })
+</script>
+
+<!-- Este script abre el fichero del log y calcula los vértices de la proyección de la imagen. -->
+<script> // Este script es el que genera las coordenadas de los puntos vertice de la imagen proyectada.
     var xCP=0, yCP=0, HCP=0, hv=0, AnchSens=0.3, LargSens=0.5, f=0.1, omega=0, phi=0, kappa=0, rumbo=0;
 
     function obtainFootprints(xCP,yCP,altitude,hv,focal,AnchSens,LargSens,omega,phi,bearing,rumbo){
         return feedProjection(xCP,yCP,altitude,hv,focal,AnchSens,LargSens,omega,phi,bearing,rumbo);
     }
 
+	// La variable test contiene todas las llamadas a funciones para el cálculo de los vértices de la proyección.
     var mydata;
     var test = $.getJSON( "AHR2.json", function(datatest) {
         mydata=datatest;
@@ -570,6 +603,9 @@
         }// function multiplyMatrix
         */
 </script>
+
+<!-- En este párrafo se imprimen todas las coordenadas de los puntos del vértice de la imagen proyectada. -->
+<p id="resultado"></p>
 
 </body>
 </html>
