@@ -1,6 +1,9 @@
-// var fs = require('fs')
+/**
+ * Pequeños ejemplos de cómo usar fs y/o graceful-fs
+ */
 
-var fs = require('graceful-fs');
+// var fs = require('fs')
+var fs = require('graceful-fs'); // Es una librería mejorada de fs por usuarios que corrige fallos de overflow que teníamos al principio.
 
 function getTime(){
 	var time = new Date();

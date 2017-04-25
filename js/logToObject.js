@@ -1,12 +1,7 @@
-/*
- * Con este Script el objetivo es crear un Array de objetos JSON
- * con el contenido de ubicación, orientación en función del tiempo.
- *
- * OJO: JSON (ejemplo de Luis).html es lo mismo que esto!
- *
- * Dani: Mi idea sería usar este script para crear todas las clases de datos, utilizar estas funciones para
- * a partir de un log "limpio" (que esté formateado a nuestro antojo solo con datos útiles) generar el JSON.
+/**
+ * Con este Script el objetivo es crear un Array de objetos JSON con el contenido de ubicación y orientación en función del tiempo.
 */
+// Dani: Mi idea sería usar este script para crear todas las clases de datos, utilizar estas funciones para a partir de un log "limpio" (que esté formateado a nuestro antojo solo con datos útiles) generar el JSON.
 
 function init(){
 	var myObj = {

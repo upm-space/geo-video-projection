@@ -13,7 +13,7 @@
         integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
         crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.4.3/proj4-src.js"></script>
-<script type="text/json" src="AHR2.json"></script>
+<script type="text/json" src="data/AHR2.json"></script>
 
 <!--
 Utilizaremos los logs ya covertidos por el programa de Pili e Itxaso para la reproducción de vuelos.
@@ -43,6 +43,15 @@ Para el feed en directo tendremos que construir un sistema de transferencia de m
 		console.log("Hay un total de "+cuentaDesorden+" posiciones desordenadas.");
     })
 </script>
+
+
+<!-- ¿Un script para reordenar si es necesario? -->
+<script>
+    // Links quizá útiles:
+    // http://stackoverflow.com/questions/19430561/how-to-sort-a-javascript-array-of-objects-by-date
+    // http://stackoverflow.com/questions/10123953/sort-javascript-object-array-by-date
+</script>
+
 
 <!-- Este script abre el fichero del log y calcula los vértices de la proyección de la imagen. -->
 <script> // Este script es el que genera las coordenadas de los puntos vertice de la imagen proyectada.
@@ -603,9 +612,16 @@ Para el feed en directo tendremos que construir un sistema de transferencia de m
         }// function multiplyMatrix
         */
 </script>
-
 <!-- En este párrafo se imprimen todas las coordenadas de los puntos del vértice de la imagen proyectada. -->
 <p id="resultado"></p>
+
+
+<!-- Para generar un .JSON con los datos del log de vuelo y los puntos calculados. -->
+<script>
+	// Links quizá útiles:
+	// http://stackoverflow.com/questions/25590486/creating-json-file-and-storing-data-in-it-with-javascript
+	// http://stackoverflow.com/questions/15915385/can-i-generate-a-json-file-with-javascript#
+</script>
 
 </body>
 </html>
