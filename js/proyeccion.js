@@ -2,18 +2,63 @@
  * Created by Héctor on 05/04/2017.
  */
 
+var fs=require("fs");
+var proj4=require("proj4");
+var filename1="C:/Oficina/Universidad/TFM/geo-video-projection/coordenadas.json";
+var filename2="C:/Oficina/Universidad/TFM/geo-video-projection/myGeoJSON.js";
+var json=require("C:/Oficina/Universidad/TFM/geo-video-projection/data/AHR2.json");
+
+/*if(fs.existsSync(filename1)){
+    fs.unlinkSync(filename1);
+}*/
+
+if(fs.existsSync(filename2)){
+    fs.unlinkSync(filename2);
+}
+
+//fs.appendFileSync(filename1,'{\n\t"Coordenadas" : [\n');
+fs.appendFileSync(filename2,'var data = {\n\t"type": "FeatureCollection",\n\t"features": [\n');
 
 function obtainFootprints(xCP,yCP,altitude,hv,focal,AnchSens,LargSens,omega,phi,bearing,rumbo){
     return feedProjection(xCP,yCP,altitude,hv,focal,AnchSens,LargSens,omega,phi,bearing,rumbo);
 }
 
-var coordinates=[];
-for (var j=0;j<3613;j++){
-    var xCP=-3, yCP=90, HCP=1000, hv=0, AnchSens=0.3, LargSens=0.5, f=0.1, omega=Math.PI/10, phi=Math.PI/20, kappa=Math.PI/2, rumbo=0;
+var xCP=0, yCP=0, HCP=0, omega=0, phi=0, kappa=0;
+var hv=600, AnchSens=0.3, LargSens=0.5, f=0.1, rumbo=0;
+
+var x1=0, y1=0, x2=0, y2=0, x3=0, y3=0, x4=0, y4=0;
+var length=json.AHR2.length;
+
+for (var j=0;j<length;j++){
+    xCP=json.AHR2[j].Lng;
+    yCP=json.AHR2[j].Lat;
+    HCP=json.AHR2[j].Alt;
+    omega=json.AHR2[j].Roll;
+    phi=json.AHR2[j].Pitch;
+    kappa=json.AHR2[j].Yaw;
+
     var result=obtainFootprints(xCP,yCP,HCP,hv,f,AnchSens,LargSens,omega,phi,kappa,rumbo);
-    coordinates.push(result);
-    document.getElementById("resultado").innerHTML += result+"\n";
+
+    x1=result[0], y1=result[4];
+    x2=result[1], y2=result[5];
+    x3=result[2], y3=result[6];
+    x4=result[3], y4=result[7];
+
+    /*if(j==length-1){
+        fs.appendFileSync(filename1,'\t\t{\n\t\t\t"x1" : "'+x1+'",\n\t\t\t"y1" : "'+y1+'",\n\t\t\t"x2" : "'+x2+'",\n\t\t\t"y2" : "'+y2+'",\n\t\t\t"x3" : "'+x3+'",\n\t\t\t"y3" : "'+y3+'",\n\t\t\t"x4" : "'+x4+'",\n\t\t\t"y4" : "'+y4+'"\n\t\t}\n');
+    }else{
+        fs.appendFileSync(filename1,'\t\t{\n\t\t\t"x1" : "'+x1+'",\n\t\t\t"y1" : "'+y1+'",\n\t\t\t"x2" : "'+x2+'",\n\t\t\t"y2" : "'+y2+'",\n\t\t\t"x3" : "'+x3+'",\n\t\t\t"y3" : "'+y3+'",\n\t\t\t"x4" : "'+x4+'",\n\t\t\t"y4" : "'+y4+'"\n\t\t},\n');
+    };*/
+
+    if(j==length-1){
+        fs.appendFileSync(filename2,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\t\n\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]]\n\t\t\t}\n\t\t}\n');
+    }else{
+        fs.appendFileSync(filename2,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]]\n\t\t\t}\n\t\t},\n');
+    };
 }
+
+//fs.appendFileSync(filename1,'\t]\n}');
+fs.appendFileSync(filename2,'\t]\n}');
 
 /*
  * @param xCP CoordenadaX del centroide
@@ -115,6 +160,9 @@ function feedProjection(xCP,yCP,HCP,hv,f,AnchSens,LargSens,omega,phi,kappa,rumbo
     yCP=center[1];
 
     kappa = kappa * Math.PI / 180 + Math.PI/2;
+    //kappa = kappa * Math.PI / 180;
+    phi = phi * Math.PI / 180;
+    omega = omega * Math.PI / 180;
     f = f / 1000; // pasamos de milímetros a metros
     AnchSens = AnchSens / 1000; // pasamos de milímetros a metros
     LargSens = LargSens / 1000; // pasamos de milímetros a metros
@@ -186,7 +234,8 @@ function feedProjection(xCP,yCP,HCP,hv,f,AnchSens,LargSens,omega,phi,kappa,rumbo
         points.forEach(function (point) {
             if (point != null) {
                 var temp = proj4(utm,'EPSG:4326',[point[0][0],point[1][0]]);
-                footprints2.push(temp);
+                footprints2[i]=temp[0];
+                footprints2[i+4]=temp[1];
             }
             i++;
         });
