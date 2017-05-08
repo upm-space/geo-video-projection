@@ -4,32 +4,32 @@
 
 var fs=require("fs");
 var proj4=require("proj4");
-var filename1="C:/Oficina/Universidad/TFM/geo-video-projection/coordenadas.json";
-var filename2="C:/Oficina/Universidad/TFM/geo-video-projection/myGeoJSON.js";
-var filename3="C:/Oficina/Universidad/TFM/geo-video-projection/myGeoJSON.json";
-var json=require("C:/Oficina/Universidad/TFM/geo-video-projection/data/AHR2.json");
+var filename1="../data/coordenadasProyeccion.json";
+var filename2="../data/myGeoJsonLeaflet.js";
+var filename3="../data/myGeoJson.json";
+var json=require("../data/AHR2.json");
 
-/*if(fs.existsSync(filename1)){
+if(fs.existsSync(filename1)){
     fs.unlinkSync(filename1);
-};*/
+};
 
 if(fs.existsSync(filename2)){
     fs.unlinkSync(filename2);
 };
 
-/*if(fs.existsSync(filename3)){
+if(fs.existsSync(filename3)){
     fs.unlinkSync(filename3);
-};*/
+};
 
-//fs.appendFileSync(filename1,'{\n\t"Coordenadas" : [\n');
+fs.appendFileSync(filename1,'{\n\t"Coordenadas" : [\n');
 fs.appendFileSync(filename2,'var data = {\n\t"type": "FeatureCollection",\n\t"features": [\n');
-//fs.appendFileSync(filename3,'{\n\t"type": "FeatureCollection",\n\t"features": [\n');
+fs.appendFileSync(filename3,'{\n\t"type": "FeatureCollection",\n\t"features": [\n');
 
 function obtainFootprints(xCP,yCP,altitude,hv,focal,AnchSens,LargSens,omega,phi,bearing,rumbo){
     return feedProjection(xCP,yCP,altitude,hv,focal,AnchSens,LargSens,omega,phi,bearing,rumbo);
 }
 
-var xCP=0, yCP=0, HCP=0, omega=0, phi=0, kappa=0;
+var xCP=0, yCP=0, HCP=0, omega=0, phi=0, kappa=0, time=0;
 var hv=600, AnchSens=0.3, LargSens=0.5, f=0.1, rumbo=0;
 
 var x1=0, y1=0, x2=0, y2=0, x3=0, y3=0, x4=0, y4=0;
@@ -42,6 +42,7 @@ for (var j=0;j<length;j++){
     omega=json.AHR2[j].Roll;
     phi=json.AHR2[j].Pitch;
     kappa=json.AHR2[j].Yaw;
+    time=json.AHR2[j].TimeUS;
 
     var result=obtainFootprints(xCP,yCP,HCP,hv,f,AnchSens,LargSens,omega,phi,kappa,rumbo);
 
@@ -50,28 +51,28 @@ for (var j=0;j<length;j++){
     x3=result[2], y3=result[6];
     x4=result[3], y4=result[7];
 
-    /*if(j==length-1){
-        fs.appendFileSync(filename1,'\t\t{\n\t\t\t"x1" : "'+x1+'",\n\t\t\t"y1" : "'+y1+'",\n\t\t\t"x2" : "'+x2+'",\n\t\t\t"y2" : "'+y2+'",\n\t\t\t"x3" : "'+x3+'",\n\t\t\t"y3" : "'+y3+'",\n\t\t\t"x4" : "'+x4+'",\n\t\t\t"y4" : "'+y4+'"\n\t\t}\n');
-    }else{
-        fs.appendFileSync(filename1,'\t\t{\n\t\t\t"x1" : "'+x1+'",\n\t\t\t"y1" : "'+y1+'",\n\t\t\t"x2" : "'+x2+'",\n\t\t\t"y2" : "'+y2+'",\n\t\t\t"x3" : "'+x3+'",\n\t\t\t"y3" : "'+y3+'",\n\t\t\t"x4" : "'+x4+'",\n\t\t\t"y4" : "'+y4+'"\n\t\t},\n');
-    };*/
-
     if(j==length-1){
-        fs.appendFileSync(filename2,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\t\n\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]]\n\t\t\t}\n\t\t}\n');
+        fs.appendFileSync(filename1,'\t\t{\n\t\t\t"x1" : "'+x1+'",\n\t\t\t"y1" : "'+y1+'",\n\t\t\t"x2" : "'+x2+'",\n\t\t\t"y2" : "'+y2+'",\n\t\t\t"x3" : "'+x3+'",\n\t\t\t"y3" : "'+y3+'",\n\t\t\t"x4" : "'+x4+'",\n\t\t\t"y4" : "'+y4+'",\n\t\t\t"TimeUS": "'+time+'"\n\t\t}\n');
     }else{
-        fs.appendFileSync(filename2,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]]\n\t\t\t}\n\t\t},\n');
+        fs.appendFileSync(filename1,'\t\t{\n\t\t\t"x1" : "'+x1+'",\n\t\t\t"y1" : "'+y1+'",\n\t\t\t"x2" : "'+x2+'",\n\t\t\t"y2" : "'+y2+'",\n\t\t\t"x3" : "'+x3+'",\n\t\t\t"y3" : "'+y3+'",\n\t\t\t"x4" : "'+x4+'",\n\t\t\t"y4" : "'+y4+'",\n\t\t\t"TimeUS": "'+time+'"\n\t\t},\n');
     };
 
-    /*if(j==length-1){
-        fs.appendFileSync(filename3,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\t\n\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]]\n\t\t\t}\n\t\t}\n');
+    if(j==length-1){
+        fs.appendFileSync(filename2,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\t\n\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]],\n\t\t\t"TimeUS": "'+time+'",\n\t\t\t}\n\t\t}\n');
     }else{
-        fs.appendFileSync(filename3,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]]\n\t\t\t}\n\t\t},\n');
-    };*/
+        fs.appendFileSync(filename2,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]],\n\t\t\t"TimeUS": "'+time+'"\n\t\t\t}\n\t\t},\n');
+    };
+
+    if(j==length-1){
+        fs.appendFileSync(filename3,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\t\n\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]],\n\t\t\t"TimeUS": "'+time+'"\n\t\t\t}\n\t\t}\n');
+    }else{
+        fs.appendFileSync(filename3,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]],\n\t\t\t"TimeUS": "'+time+'"\n\t\t\t}\n\t\t},\n');
+    };
 }
 
-//fs.appendFileSync(filename1,'\t]\n}');
+fs.appendFileSync(filename1,'\t]\n}');
 fs.appendFileSync(filename2,'\t]\n}');
-//fs.appendFileSync(filename3,'\t]\n}');
+fs.appendFileSync(filename3,'\t]\n}');
 
 /*
  * @param xCP CoordenadaX del centroide

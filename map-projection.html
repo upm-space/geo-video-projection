@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" integrity="sha512-07I2e+7D8p6he1SIM+1twR5TIrhUQn9+I6yjqD53JQjFiMf8EtC93ty0/5vJTZGF8aAocvHYNEDJajGdNx1IsQ==" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js" integrity="sha512-A7vV8IFfih/D732iSSKi20u/ooOfj/AGehOKq0f4vLT1Zr2Y+RX7C+w8A1gaSasGtRUZpF/NZgzSAu4/Gc41Lg==" crossorigin=""></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <script src="myGeoJSON.js"></script>
+    <script src="data/myGeoJsonLeaflet.js"></script>
 
 
 </head>
@@ -41,20 +41,6 @@
     };
 
     var geojson;
-/*
-    var myGeometry = {
-        "type": "Polygon",
-        "coordinates": [[[-3.694424602233734, 40.07612758301975], [-3.6782070907195488, 40.09990562517463], [-3.6969190179757296, 40.107304156939435], [-3.713131698497488, 40.08352356626559]]]
-    };
-
-    L.geoJSON(myGeometry, {
-        style: myStyle
-    }).addTo(mymap);
-*/
-    /*$.getJSON("myGeoJSON.geojson",function(data){
-        // add GeoJSON layer to the map once the file is loaded
-        L.geoJson(data).addTo(mymap);
-    });*/
 
     var i=0;
     function represent(){
