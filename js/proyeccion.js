@@ -58,15 +58,15 @@ for (var j=0;j<length;j++){
     };
 
     if(j==length-1){
-        fs.appendFileSync(filename2,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\t\n\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]],\n\t\t\t"TimeUS": "'+time+'",\n\t\t\t}\n\t\t}\n');
+        fs.appendFileSync(filename2,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\t\n\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]],\n\t\t\t"time": "'+time+'",\n\t\t\t}\n\t\t}\n');
     }else{
-        fs.appendFileSync(filename2,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]],\n\t\t\t"TimeUS": "'+time+'"\n\t\t\t}\n\t\t},\n');
+        fs.appendFileSync(filename2,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]],\n\t\t\t"time": "'+time+'"\n\t\t\t}\n\t\t},\n');
     };
 
     if(j==length-1){
-        fs.appendFileSync(filename3,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\t\n\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]],\n\t\t\t"TimeUS": "'+time+'"\n\t\t\t}\n\t\t}\n');
+        fs.appendFileSync(filename3,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\t\n\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]],\n\t\t\t"time": "'+time+'"\n\t\t\t}\n\t\t}\n');
     }else{
-        fs.appendFileSync(filename3,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]],\n\t\t\t"TimeUS": "'+time+'"\n\t\t\t}\n\t\t},\n');
+        fs.appendFileSync(filename3,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]],\n\t\t\t"time": "'+time+'"\n\t\t\t}\n\t\t},\n');
     };
 }
 
