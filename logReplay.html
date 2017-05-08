@@ -24,6 +24,29 @@
     <script src="js/usedLibraries/three.js"></script>
     <script src="js/complements.js"></script>
 
+    <!-- Este script abre el fichero del log y genera un vector que usaremos para representar el vuelo. -->
+    <script>
+		var flightLog = $.getJSON( "data/AHR2.json", function(data) {
+			mydata = data;
+			var timeStamp = new ArrayBuffer(mydata.AHR2.lenght),
+				cuentaDesorden = 0,
+				posicionesDesordenadas;
+
+			for (j=0 ; j < mydata.AHR2.length ; j++ ){
+				timeStamp[j] = mydata.AHR2[j].TimeUS;
+
+				for ( i=0 ; i < j ; i++ ){
+					if ( timeStamp[i] > timeStamp[j] ) {
+						console.log("timeStamp["+i+"] = "+timeStamp[i]+"es mayor que timeStamp["+j+"] = " + timeStamp[j]);
+						posicionesDesordenadas[a] = [ j, i ]; // Luego se intercambiarán la posición i y j.
+						cuentaDesorden++;
+					}
+				}
+			}
+			console.log("Se ha completado el escaneo.");
+			console.log("Hay un total de "+cuentaDesorden+" posiciones desordenadas.");
+		})
+    </script>
 
     <script id="Three.JS Render">
 
@@ -41,26 +64,36 @@
 		    var material = new THREE.MeshBasicMaterial({ color: '#0100ff' , wireframe: true });
             var ground = new THREE.Mesh( plane, material );
 		ground.rotation.x = Math.PI/2;
+		ground.position.y = 0;
 		scene.add( ground );
 
-		// Cubos en el suelo (para orientación)
+		// Cubo en el suelo
 		    var geometry = new THREE.BoxGeometry( 1, 1, 1 );
                 // Para cambiar el material de la superficie y que reaccione con la luz:
-                var material = new THREE.MeshPhysicalMaterial( {
-                    map: null,
-                    color: '#42f459',
-                    metalness: 0.01,
-                    roughness: 50,
-                    opacity: 100
-                } );
+            var material = new THREE.MeshPhysicalMaterial( {
+                map: null,
+                color: '#42f459',
+                metalness: 0.01,
+                roughness: 50,
+                opacity: 100
+            });
 		    var cube = new THREE.Mesh( geometry, material );
-                // Usando BasicMaterial:
-		        var material = new THREE.MeshBasicMaterial({ color: '#0100ff' , wireframe: true });
-            var cube2 = new THREE.Mesh( geometry, material );
+		// Esfera en el suelo
+            var geometry = new THREE.SphereGeometry( 2, 20, 20 );
+		    var loader = new THREE.TextureLoader();
+		    var texture = loader.load("data/Imagen.png");
+            var material = new THREE.MeshPhongMaterial({
+                color: '#0100ff',
+                specular: '#333333',
+                shininess: 15,
+                wireframe: true,
+                texture: texture
+            });
+            var sphere = new THREE.Mesh( geometry, material );
 		cube.position.set( 5, 0.5, 0 );
-		cube2.position.set( -5, 0.5, 5);
+		sphere.position.set( -5, 0.5, 5);
 		scene.add( cube );
-		scene.add( cube2 );
+		scene.add( sphere );
 
 		// Añadir luz a la escena
             var pointLight1 = new THREE.PointLight( 0xfffff );
@@ -99,12 +132,12 @@
         // Estructura de representación en función de Array de datos. //
         ////////////////////////////////////////////////////////////////
 		var a = 0, j = 0, renderTimeNow, renderTimeNext,
-            bla = new Array, time = new Array,
+            bla = new Array, fakeTime = new Array,
             t0 = 0; // = bla.AHR2(j).UStime; - tomamos el tiempo inicial del log como referencia 'cero'
 
         for (i = 0; i < 10000; i++) {
         	bla[i] = i/10; // va de 0 a 10 (unidades de distancia)
-        	time[i] = i/100; // va de 0 a 100 (s)
+        	fakeTime[i] = i/100; // va de 0 a 100 (s)
         }
 
         /////////////////////////////
@@ -113,7 +146,7 @@
 		function render() {
 			requestAnimationFrame( render );
 			cube.rotation.y += 0.01;
-			cube2.rotation.y += -0.02;
+			sphere.rotation.y += -0.02;
 
             // Dentro de la función render creamos un algoritmo para validar que el dato representado corresponde al último instante con log.
 			if (a == 0){
@@ -126,19 +159,19 @@
 			reloj = (renderCurrentTime-renderStartTime)/1000 ; // (ms)
 
             // Hacemos un algoritmo para garantizar que el tiempo transcurrido de renderizado coincide con el del log.
-            renderTimeNow = time[j]-t0;
-            renderTimeNext = time[j+1]-t0;
+            renderTimeNow = fakeTime[j]-t0;
+            renderTimeNext = fakeTime[j+1]-t0;
             if ( renderTimeNow - reloj < 0 ) { // Casos A y B
                 if ( renderTimeNext - reloj < 0 ) { // Caso B
                     while ( renderTimeNext - reloj < 0) {
                         j++;
-                        renderTimeNext = time[j]-t0;
+                        renderTimeNext = fakeTime[j]-t0;
                     }
                 }
 			} else { // Caso C
                 while ( renderTimeNow - reloj > 0 ){
                     j--;
-                    renderTimeNow = time[j]-t0;
+                    renderTimeNow = fakeTime[j]-t0;
                 }
             }
             console.log("¡Todo está bien!");
@@ -150,6 +183,7 @@
             console.log("Bla(j) = " + bla[j]);
 
             camera.position.x = bla[j];
+			camera.position.y += bla[j]/1000;
             camera.lookAt( ground.position );
 
 			renderer.render( scene, camera );
