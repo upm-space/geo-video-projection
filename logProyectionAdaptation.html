@@ -22,7 +22,7 @@ Para el feed en directo tendremos que construir un sistema de transferencia de m
 
 <!-- Este script abre el fichero del log y comprueba que el tiempo está en orden. -->
 <script>
-    var flightLogOrder = $.getJSON( "AHR2.json", function(dataOrder) {
+    var flightLogOrder = $.getJSON( "data/AHR2.json", function(dataOrder) {
         mydata = dataOrder;
         var timeStamp = new ArrayBuffer(mydata.AHR2.lenght),
             cuentaDesorden = 0,
@@ -63,7 +63,7 @@ Para el feed en directo tendremos que construir un sistema de transferencia de m
 
 	// La variable test contiene todas las llamadas a funciones para el cálculo de los vértices de la proyección.
     var mydata;
-    var test = $.getJSON( "AHR2.json", function(datatest) {
+    var test = $.getJSON( "data/AHR2.json", function(datatest) {
         mydata=datatest;
         console.log(mydata.AHR2[0].Lng);
 
