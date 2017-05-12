@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es-ES">
+<head>
+    <meta charset="UTF-8">
+    <title>Log Replay</title>
+    <link rel="stylesheet" type="text/css" href="css/logReplayStyle.css">
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
+</head>
+
+<body>
+
+<div id="playSettings" style="width: 400px">
+    <h4>
+        Play status (-1 backwards, 0 pause, 1 forward):<br>
+        <span id="playStatus" style="font-weight: bolder"></span>
+    </h4>
+    <h4>
+        Play speed (from -X to +X):<br>
+        <span id="playSpeed" style="font-weight: bolder"></span>
+    </h4>
+    <h4>
+        Timeline:<br>
+        <span id="timeline" style="font-weight: bolder"></span>, currently
+        <span id="currInstant" style="font-weight: bolder"></span>
+    </h4>
+
+</div>
+
+<!-- svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+height="200%" width="200%">
+	<svg>
+		<rect height="250" width="400" style="fill: #b7cdff"/>
+	</svg>
+	<svg x="200">
+		<rect x="10" y="10" height="50" width="50"
+		style="stroke:#009900; fill: #00cc00"/>
+	</svg>
+</svg -->
+
+<!-- div>
+    <svg width="640" height="480" xmlns="http://www.w3.org/2000/svg">
+        <foreignObject id="G" width="300" height="200">
+            <rect fill="blue" stroke-width="2" height="112" width="84" y="55" x="55" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke="#000000"/>
+            <ellipse fill="#FF0000" stroke="#000000" stroke-width="5" stroke-dasharray="null" stroke-linejoin="null" stroke-linecap="null" cx="155" cy="65" id="svg_7" rx="64" ry="56"/>
+    </svg>
+    <style>
+        #G {
+            background: #cff; border: 1px dashed black;
+        }
+        #G:hover {
+            background: #acc; border: 1px solid black;
+        }
+    </style>
+    </foreignObject>
+    </svg>
+</div> -->
+
+<div style="position:absolute; bottom: 5px; right: 5px">
+    <font color="grey"><b><em>¡En pruebas!</em></b></font><br>
+
+    <svg width="350" height="150">
+        <rect width="350" height="50" fill="grey" stroke="#000000" stroke-width="1"></rect>
+        <rect width="25" height="150" x="0" fill="lightgrey" stroke="#000000" stroke-width="1"></rect>
+        <rect width="25" height="150" x="325" fill="lightgrey" stroke="#000000" stroke-width="1"></rect>
+        <rect width="300" height="100" x="25" y="50" fill="darkgrey"></rect>
+
+        <svg class="ytp-play-button ytp-button"
+             width="100" height="100" x="25" y="50"
+             viewBox="0 0 36 36">
+            <defs>
+                <path id="ytp-12"
+                      d="M 11 10 L 17 10 L 17 26 L 11 26 M 20 10 L 26 10 L 26 26 L 20 26">
+                    <animate id="animation"
+                             begin="indefinite"
+                             attributeType="XML"
+                             attributeName="d"
+                             fill="freeze"
+                             from="M11,10 L17,10 17,26 11,26 M20,10 L26,10 26,26 20,26"
+                             to="M11,10 L18,13.74 18,22.28 11,26 M18,13.74 L26,18 26,18 18,22.28"
+                             dur="0.1s"
+                             keySplines=".4 0 1 1"
+                             repeatCount="1"></animate>
+                </path>
+            </defs>
+            <use xlink:href="#ytp-12" class="ytp-svg-shadow"></use>
+            <use xlink:href="#ytp-12" class="ytp-svg-fill"></use>
+        </svg>
+        <svg class="ytp-play-button ytp-button"
+             width="100" height="100" x="125" y="50"
+             viewBox="0 0 36 36">
+            <defs>
+                <path id="ytp-12"
+                      d="M 11 10 L 17 10 L 17 26 L 11 26 M 20 10 L 26 10 L 26 26 L 20 26">
+                    <animate id="animation"
+                             begin="indefinite"
+                             attributeType="XML"
+                             attributeName="d"
+                             fill="freeze"
+                             from="M11,10 L17,10 17,26 11,26 M20,10 L26,10 26,26 20,26"
+                             to="M11,10 L18,13.74 18,22.28 11,26 M18,13.74 L26,18 26,18 18,22.28"
+                             dur="0.1s"
+                             keySplines=".4 0 1 1"
+                             repeatCount="1"></animate>
+                </path>
+            </defs>
+            <use xlink:href="#ytp-12" class="ytp-svg-shadow"></use>
+            <use xlink:href="#ytp-12" class="ytp-svg-fill"></use>
+        </svg>
+        <svg class="ytp-play-button ytp-button"
+             width="100" height="100" x="225" y="50"
+             viewBox="0 0 36 36">
+            <defs>
+                <path id="ytp-12"
+                      d="M 11 10 L 17 10 L 17 26 L 11 26 M 20 10 L 26 10 L 26 26 L 20 26">
+                    <animate id="animation"
+                             begin="indefinite"
+                             attributeType="XML"
+                             attributeName="d"
+                             fill="freeze"
+                             from="M11,10 L17,10 17,26 11,26 M20,10 L26,10 26,26 20,26"
+                             to="M11,10 L18,13.74 18,22.28 11,26 M18,13.74 L26,18 26,18 18,22.28"
+                             dur="0.1s"
+                             keySplines=".4 0 1 1"
+                             repeatCount="1"></animate>
+                </path>
+            </defs>
+            <use xlink:href="#ytp-12" class="ytp-svg-shadow"></use>
+            <use xlink:href="#ytp-12" class="ytp-svg-fill"></use>
+        </svg>
+    </svg>
+
+    <script id="buttonScript">
+        var flip = true,
+            pause = "M11,10 L18,13.74 18,22.28 11,26 M18,13.74 L26,18 26,18 18,22.28",
+            play = "M11,10 L17,10 17,26 11,26 M20,10 L26,10 26,26 20,26",
+            $animation = $('#animation');
+
+        $(".ytp-play-button").on('click', function() {
+            flip = !flip;
+            $animation.attr({
+                "from": flip ? pause : play,
+                "to": flip ? play : pause
+            }).get(0).beginElement();
+
+            if (playStatus==1) {playStatus=0} else {playStatus=1}
+			playSettingsUpdate();
+        });
+    </script>
+</div>
+
+<script>
+    var playStatus  = 0, // -1 backwards, 0 pause, 1 forward
+		playSpeed   = 1, // from -X to +X
+		currInstant = 100, // (s)
+		initInstant = 100, // Time UTC
+		finInstant  = 500; // Time UTC
+
+	function playSettingsUpdate() {
+		document.getElementById("playStatus").innerHTML= playStatus;
+		document.getElementById("playSpeed").innerHTML= playSpeed;
+		document.getElementById("timeline").innerHTML= "from "+initInstant+" to "+finInstant;
+		document.getElementById("currInstant").innerHTML= currInstant;
+	}
+
+	document.getElementById("playSettings").onload = function() { playSettingsUpdate() };
+	// Not working now for some reason.
+    playSettingsUpdate();
+</script>
+
+</body>
+</html>

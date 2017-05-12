@@ -27,14 +27,47 @@
             integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
             crossorigin="anonymous"></script>
 
+    <div id="renderScreen">
 
-    <script id="Three.JS Render">
+        <div style="position:absolute; bottom: 5px; right: 5px">
+            <font color="white"><b><em>¡En pruebas!</em></b></font><br>
 
-        ////////////////////////////////////////////////////////////////
-		// Estructura de representación en función de Array de datos. //
-		////////////////////////////////////////////////////////////////
-		// Abrimos el log y lo dejamos en la memoria como flightLog.
-		var flightLog = (function () {
+            <button class="ytp-play-button ytp-button" aria-live="assertive" tabindex="22" aria-label="Pause">
+                <svg width="25%" viewBox="0 0 36 36" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                    <defs>
+                        <path id="ytp-12" d="M 11 10 L 17 10 L 17 26 L 11 26 M 20 10 L 26 10 L 26 26 L 20 26">
+                            <animate id="animation" begin="indefinite" attributeType="XML" attributeName="d" fill="freeze" from="M11,10 L17,10 17,26 11,26 M20,10 L26,10 26,26 20,26" to="M11,10 L18,13.74 18,22.28 11,26 M18,13.74 L26,18 26,18 18,22.28" dur="0.1s" keySplines=".4 0 1 1"
+                                     repeatCount="1"></animate>
+                        </path>
+                    </defs>
+                    <use xlink:href="#ytp-12" class="ytp-svg-shadow"></use>
+                    <use xlink:href="#ytp-12" class="ytp-svg-fill"></use>
+                </svg>
+            </button>
+            <script>
+				var flip = true,
+					pause = "M11,10 L18,13.74 18,22.28 11,26 M18,13.74 L26,18 26,18 18,22.28",
+					play = "M11,10 L17,10 17,26 11,26 M20,10 L26,10 26,26 20,26",
+					$animation = $('#animation');
+
+				$(".ytp-play-button").on('click', function() {
+					flip = !flip;
+					$animation.attr({
+						"from": flip ? pause : play,
+						"to": flip ? play : pause
+					}).get(0).beginElement();
+				});
+            </script>
+        </div>
+    </div>
+
+
+    <script id="Three.JS Renderer">
+
+        ///////////////////
+		// Datos previos //
+		///////////////////
+		var flightLog = (function () { // Abrimos el log y lo dejamos en la memoria como flightLog.
 			var json = null;
 			$.ajax({
 				'async':false, 'global':false, 'url': "data/AHR2.json", 'dataType': "json",
@@ -47,7 +80,13 @@
 		// Ahora flightLog se puede acceder por: flightLog.AHR2[i].AtributoJ
 		var a = 0, j = 0, renderTimeNow, renderTimeNext,
 			t0 = flightLog.AHR2[0].TimeUS; // (microsecs) Tomamos el tiempo inicial del log como referencia 'cero'
-
+        var camAspRatio = 16/9, FoV = 45;
+        camAspRatio = window.innerWidth / window.innerHeight;
+		var playStatus  = 0, // -1 backwards, 0 pause, 1 forward
+			playSpeed   = 1, // from -X to +X
+			currInstant = 0, // (s)
+			initInstant = 0, // Time UTC
+			finInstant  = 0; // Time UTC
 
         ///////////
 		// SCENE //
@@ -112,7 +151,7 @@
 		////////////
 		// CAMERA //
 		////////////
-        var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+        var camera = new THREE.PerspectiveCamera( FoV, camAspRatio, 0.1, 1000 );
         // Config con los parámetros: ( field of view (ángulo), aspect ratio (ancho/alto), min distancia, max distancia )
 		scene.add( camera );
 		camera.position.set( flightLog.AHR2[0].Lat, flightLog.AHR2[0].Lng, flightLog.AHR2[0].Alt );
@@ -125,7 +164,8 @@
 		var renderer = new THREE.WebGLRenderer();
 		renderer.setSize( window.innerWidth, window.innerHeight, false );
 		// If you wish to keep the size of your app but render it at a lower resolution, you can do so by calling setSize with false as updateStyle (the third argument). For example, setSize(window.innerWidth/2, window.innerHeight/2, false) will render your app at half resolution, given that your <canvas> has 100% width and height.
-		document.body.appendChild( renderer.domElement );
+		document.getElementById('renderScreen').appendChild( renderer.domElement );
+		// getElementById('container') / body
 
 
         /////////////////////////////
@@ -146,7 +186,7 @@
 			} // primer frame del renderizado, comienza el reloj
 			var currTime = new Date();
 			renderCurrentTime = currTime.getTime();
-			reloj = 20*(renderCurrentTime-renderStartTime)/1000 ; // (s)
+			reloj = playSpeed*(renderCurrentTime-renderStartTime)/1000 ; // (s)
 
             // Hacemos un algoritmo para garantizar que el tiempo transcurrido de renderizado coincide con el del log.
             renderTimeNow  = (flightLog.AHR2[ j ].TimeUS-t0)/1000000; // (s)
