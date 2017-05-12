@@ -2,7 +2,7 @@
 <html>
 <head>
 
-    <title></title>
+    <title>Map Projection</title>
 
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,10 +20,12 @@
 
 
 
-<div id="mapid" style="width: 900px; height: 600px;"></div>
+<div id="mapid" style="width: 100%; height: 958px;"></div>
 <script>
+    var Lng = (data.features[0].geometry.coordinates[0][0][0]+data.features[0].geometry.coordinates[0][2][0])/2;
+    var Lat = (data.features[0].geometry.coordinates[0][0][1]+data.features[0].geometry.coordinates[0][2][1])/2;
 
-    var mymap = L.map('mapid').setView([40.09, -3.695], 15);
+    var mymap = L.map('mapid').setView([Lat, Lng], 16);
 
     L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
         maxZoom: 24,
@@ -44,7 +46,7 @@
 
     var j=0, a=0, renderStartTime=0, renderCurrentTime=0, renderTimeNow=0, renderTimeNext=0, reloj=0;
     var length=data.features.length;
-    var t0=data.features[0].time;
+    var t0=data.features[0].TimeUS/1000;
     function represent(){
         if (a == 0){
             var currTime = new Date();
@@ -53,22 +55,22 @@
         } // primer frame del renderizado, comienza el reloj
         var currTime = new Date();
         renderCurrentTime = currTime.getTime();
-        reloj = (renderCurrentTime-renderStartTime)/1000 ; // (ms)
+        reloj = renderCurrentTime-renderStartTime ; // (ms)
 
         // Hacemos un algoritmo para garantizar que el tiempo transcurrido de renderizado coincide con el del log.
-        renderTimeNow = data.features[j].time-t0;
-        renderTimeNext = data.features[j+1].time-t0;
+        renderTimeNow = data.features[j].TimeUS/1000-t0;
+        renderTimeNext = data.features[j+1].TimeUS/1000-t0;
         if ( renderTimeNow - reloj < 0 ) { // Casos A y B
             if ( renderTimeNext - reloj < 0 ) { // Caso B
                 while ( renderTimeNext - reloj < 0) {
                     j++;
-                    renderTimeNext = data.features[j].time-t0;
+                    renderTimeNext = data.features[j].TimeUS/1000-t0;
                 }
             }
         } else { // Caso C
             while ( renderTimeNow - reloj > 0 ){
                 j--;
-                renderTimeNow = data.features[j].time-t0;
+                renderTimeNow = data.features[j].TimeUS/1000-t0;
             }
         }
         if(j>0){
@@ -78,12 +80,6 @@
             style: myStyle
         }).addTo(mymap);
         if(j>length-1){j=0};
-        j++;
-        console.log(reloj - renderTimeNow);
-        console.log('j = ' + j);
-        console.log("TimeNow = " + renderTimeNow);
-        console.log("Reloj = " + reloj);
-        console.log("TimeNext = " + renderTimeNext);
     };
 
     setInterval(represent,10);

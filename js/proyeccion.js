@@ -46,27 +46,27 @@ for (var j=0;j<length;j++){
 
     var result=obtainFootprints(xCP,yCP,HCP,hv,f,AnchSens,LargSens,omega,phi,kappa,rumbo);
 
-    x1=result[0], y1=result[4];
-    x2=result[1], y2=result[5];
-    x3=result[2], y3=result[6];
-    x4=result[3], y4=result[7];
+    x1=result[0].toFixed(16), y1=result[4].toFixed(16);
+    x2=result[1].toFixed(16), y2=result[5].toFixed(16);
+    x3=result[2].toFixed(16), y3=result[6].toFixed(16);
+    x4=result[3].toFixed(16), y4=result[7].toFixed(16);
 
     if(j==length-1){
-        fs.appendFileSync(filename1,'\t\t{\n\t\t\t"x1" : "'+x1+'",\n\t\t\t"y1" : "'+y1+'",\n\t\t\t"x2" : "'+x2+'",\n\t\t\t"y2" : "'+y2+'",\n\t\t\t"x3" : "'+x3+'",\n\t\t\t"y3" : "'+y3+'",\n\t\t\t"x4" : "'+x4+'",\n\t\t\t"y4" : "'+y4+'",\n\t\t\t"TimeUS": "'+time+'"\n\t\t}\n');
+        fs.appendFileSync(filename1,'\t\t{\n\t\t\t"x1" : "'+x1+'",\t"y1" : "'+y1+'",\n\t\t\t"x2" : "'+x2+'",\t"y2" : "'+y2+'",\n\t\t\t"x3" : "'+x3+'",\t"y3" : "'+y3+'",\n\t\t\t"x4" : "'+x4+'",\t"y4" : "'+y4+'",\n\t\t\t"TimeUS": "'+time+'"\n\t\t}\n');
     }else{
-        fs.appendFileSync(filename1,'\t\t{\n\t\t\t"x1" : "'+x1+'",\n\t\t\t"y1" : "'+y1+'",\n\t\t\t"x2" : "'+x2+'",\n\t\t\t"y2" : "'+y2+'",\n\t\t\t"x3" : "'+x3+'",\n\t\t\t"y3" : "'+y3+'",\n\t\t\t"x4" : "'+x4+'",\n\t\t\t"y4" : "'+y4+'",\n\t\t\t"TimeUS": "'+time+'"\n\t\t},\n');
+        fs.appendFileSync(filename1,'\t\t{\n\t\t\t"x1" : "'+x1+'",\t"y1" : "'+y1+'",\n\t\t\t"x2" : "'+x2+'",\t"y2" : "'+y2+'",\n\t\t\t"x3" : "'+x3+'",\t"y3" : "'+y3+'",\n\t\t\t"x4" : "'+x4+'",\t"y4" : "'+y4+'",\n\t\t\t"TimeUS": "'+time+'"\n\t\t},\n');
     };
 
     if(j==length-1){
-        fs.appendFileSync(filename2,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\t\n\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]],\n\t\t\t"time": "'+time+'",\n\t\t\t}\n\t\t}\n');
+        fs.appendFileSync(filename2,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]]\n\t\t\t},\n\t\t\t"TimeUS": '+time+'\n\t\t}\n');
     }else{
-        fs.appendFileSync(filename2,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]],\n\t\t\t"time": "'+time+'"\n\t\t\t}\n\t\t},\n');
+        fs.appendFileSync(filename2,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]]\n\t\t\t},\n\t\t\t"TimeUS": '+time+'\n\t\t},\n');
     };
 
     if(j==length-1){
-        fs.appendFileSync(filename3,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\t\n\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]],\n\t\t\t"time": "'+time+'"\n\t\t\t}\n\t\t}\n');
+        fs.appendFileSync(filename3,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]]\n\t\t\t},\n\t\t\t"TimeUS": "'+time+'"\n\t\t}\n');
     }else{
-        fs.appendFileSync(filename3,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]],\n\t\t\t"time": "'+time+'"\n\t\t\t}\n\t\t},\n');
+        fs.appendFileSync(filename3,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]]\n\t\t\t},\n\t\t\t"TimeUS": "'+time+'"\n\t\t},\n');
     };
 }
 
