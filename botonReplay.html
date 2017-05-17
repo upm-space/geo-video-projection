@@ -130,7 +130,7 @@ height="200%" width="200%">
              width="100" height="100" x="0" y="25" viewBox="0 0 36 36">
             <defs>
                 <path id="backwardPath"
-                      d="M 11 18 L 26 26 L 26 10">
+                      d="M 11 18 L 26 26 L 26 10"/>
             </defs>
             <rect width="18" height="18" x="9" y="9" fill="transparent"/>
             <use xlink:href="#backwardPath" class="buttonVisual"/>
@@ -148,11 +148,10 @@ height="200%" width="200%">
              width="100" height="100" x="200" y="25" viewBox="0 0 36 36">
             <defs>
                 <path id="forwardPath"
-                      d="M11 10 L11 26 L26 18 Z">
-                </path>
+                      d="M11 10 L11 26 L26 18 Z"/>
             </defs>
-            <rect width="18" height="18" x="9" y="9" fill="transparent"></rect>
-            <use xlink:href="#forwardPath" class="buttonVisual"></use>
+            <rect width="18" height="18" x="9" y="9" fill="transparent"/>
+            <use xlink:href="#forwardPath" class="buttonVisual"/>
         </svg>
 
         <!-- TEXTBOX -->
@@ -175,7 +174,7 @@ height="200%" width="200%">
 		finInstant  = 500; // Time UTC
 
 	$(".backward").on('click', function() {
-		playStatus = -playStatus;
+		playStatus = -1;
 		console.log("Has pulsado backward!");
 		playSettingsUpdate();
 	});
@@ -190,7 +189,7 @@ height="200%" width="200%">
 
 
 	$(".forward").on('click', function() {
-		playStatus = -playStatus;
+		playStatus = 1;
 		console.log("Has pulsado forward!");
 		playSettingsUpdate();
 	});
