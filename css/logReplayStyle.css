@@ -1,0 +1,51 @@
+@import url(http://fonts.googleapis.com/css?family=Roboto:400,300,100);
+
+body {
+    background-color: #e0e0e0;
+}
+
+.buttonVisual {
+    fill: #161616;
+    opacity: 0.95;
+}
+
+.buttonVisual:hover {
+    cursor: pointer;
+    opacity: 0.5;
+}
+
+#stage-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#stage {
+
+}
+
+#slider-inner {
+    fill: transparent;
+//stroke: #ccc;
+    stroke: transparent;
+}
+
+#track-inner {
+    fill: #6a6a6a;
+}
+
+#track-fill,
+#handle-inner,
+#handle-clone {
+    fill: #E91E63;
+}
+
+.progress {
+    position: absolute;
+    font-weight: bold;
+    line-height: 100px;
+    top: 50%;
+    left: 100%;
+    transform: translate(-25%, -50%);
+}
