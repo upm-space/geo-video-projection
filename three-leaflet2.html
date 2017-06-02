@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet/0.6.3/leaflet.css" />
+    <script src="//cdnjs.cloudflare.com/ajax/libs/zepto/1.0/zepto.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/leaflet/0.6.3/leaflet.js"></script>
+    <script src="js/Three.js"></script>
+    <script src="js/Projector.js"></script>
+    <script src="js/CanvasRenderer.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="js/tween.min.js"></script>
+    <script src="js/three-stats.min.js"></script>
+    <video id="myVideo" autoplay loop style="display:none">
+        <source src="https://stemkoski.github.io/Three.js/videos/sintel.ogv" type='video/ogg; codecs="theora, vorbis"'>
+    </video>
+</head>
+<body onload = init()>
+<div id="map" style="width: 400px;height: 400px; background-color: #46ca3b; position: absolute; top: 10px ; left: 420px"></div>
+<div id="both" style="width: 400px;height: 400px; background-color: #46ca3b; position: absolute; top: 10px ; left: 830px"></div>
+<div id="three" style="width: 400px;height: 400px; background-color: #46ca3b; position: absolute; top: 10px ; left: 10px"></div>
+
+<script>
+    var map;
+    var scene, camera, renderer, container;
+    var video, image, imageContext, texture;
+    var group, planeMesh, data = [];
+    var j = 0;
+    var Lat0, Lng0;
+
+    video = document.getElementById( 'myVideo' );
+    //video = document.createElement( 'video' );
+    //video.type = 'video/ogg; codecs="theora, vorbis"';
+    //video.src = 'https://stemkoski.github.io/Three.js/videos/sintel.ogv';
+    image = document.createElement( 'canvas' );
+    image.width = 480;
+    image.height = 204;
+    imageContext = image.getContext( '2d' );
+    imageContext.fillStyle = '#000000';
+    imageContext.fillRect( 0, 0, 480, 204 );
+    texture = new THREE.Texture( image );
+
+    $.get("data/citi-field.geo4.json", function (datamon) {
+        data = datamon;
+        var coordenadas = data.features[0].geometry.coordinates;
+        Lng0 = (coordenadas[0][0][0]+coordenadas[0][2][0])/2;
+        Lat0 = (coordenadas[0][0][1]+coordenadas[0][2][1])/2;
+    });
+
+    function init(){
+        initMap();
+        initThree();
+        initBoth();
+    }
+
+    function initMap(){
+        map = new L.Map('map');
+        var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        var osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
+        var osm = new L.TileLayer(osmUrl, {minZoom: 4, maxZoom: 12, attribution: osmAttrib});
+        map.setView(new L.LatLng(Lat0, Lng0),8);
+        map.addLayer(osm);
+    }
+
+    function initThree(){
+        initScene()
+        animate();
+
+        function initScene() {
+            container = document.getElementById( 'three' );
+            camera = new THREE.PerspectiveCamera( 45, 400 / 400, 1, 10000 );
+            camera.position.z = 1000;
+            scene = new THREE.Scene();
+            drawObjects()
+            renderer = new THREE.CanvasRenderer();
+            renderer.setClearColor( 0xb0b0b0 );
+            renderer.setSize( 400, 400 );
+            container.appendChild( renderer.domElement );
+        }
+
+        function animate() {
+            requestAnimationFrame( animate );
+            render();
+        }
+
+        function render() {
+            if ( video.readyState === video.HAVE_ENOUGH_DATA ) {
+                imageContext.drawImage( video, 0, 0 );
+                if ( texture ) texture.needsUpdate = true;
+            }
+            renderer.render( scene, camera );
+        }
+
+        function geoJSONGeometryToShape(geometry) {
+            if (geometry.type !== "Polygon") {
+                throw "Only Polygons are currently supported";
+            }
+            var vertices = geometry.coordinates[0];
+            var vertices2 = [];
+            for (var i = 0; i < vertices.length; ++i) {
+                vertices2[i] = LatLngToPx(vertices[i]);
+            }
+            var pts = [];
+            for (i = 0; i < vertices.length; ++i) {
+                var ppt = vertices2[i];
+                //pts.push(new THREE.Vector2(ppt.x, ppt.y));
+                pts[i] = new THREE.Vector2(ppt.x, ppt.y);
+            }
+            var shape = new THREE.Shape();
+            shape.moveTo(vertices2[0]);
+            shape.lineTo(vertices2[1]);
+            shape.lineTo(vertices2[2]);
+            shape.lineTo(vertices2[3]);
+            shape.lineTo(vertices2[0]);
+            shape.autoClose = true;
+            return shape;
+        }
+
+        function drawObjects() {
+            group = new THREE.Object3D();
+            var building = data.features[0].geometry;
+            var extrudeSettings = {
+                amount: 100,
+                bevelEnabled: false
+            };
+            var shape = geoJSONGeometryToShape(building);
+            var geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+            var plane = new THREE.PlaneGeometry( 480, 204, 1, 1 );
+            var material = new THREE.MeshBasicMaterial({
+                color: 0xff0000,
+                shading: THREE.FlatShading,
+                opacity: 0.8,
+                overdraw: 0.5,
+                wireframe: false
+            });
+            var material2 = new THREE.MeshBasicMaterial({
+                map: texture,
+                color: 0xff0000,
+                shading: THREE.FlatShading,
+                //opacity: 0.8,
+                overdraw: 0.5,
+                side: THREE.DoubleSide,
+                wireframe: false
+            });
+            var mesh = new THREE.Mesh(geometry, material);
+            planeMesh = new THREE.Mesh(plane, material2);
+            scene.add(mesh);
+            scene.add(planeMesh)
+        }
+
+        function LatLngToPx(point){
+            var Lng=point[0]*20000/180+600;
+            var Lat=point[1]*20000/90-8600;
+            return [Lng, Lat]
+        }
+    }
+
+    function initBoth(){
+        /*L.Map.include({
+            'clearLayers': function () {
+                this.eachLayer(function (layer) {
+                    this.removeLayer(layer);
+                }, this);
+            }
+        });*/
+        map = new L.Map('both');
+        var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        var osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
+        var osm = new L.TileLayer(osmUrl, {minZoom: 4, maxZoom: 12, attribution: osmAttrib});
+        map.setView(new L.LatLng(Lat0, Lng0),8);
+        map.addLayer(osm);
+
+        L.SG3DLayer = L.Class.extend({
+            map: null,
+            container: null,
+            data: null,
+            group: null,
+            vFOV: 60,
+            cameraHeight: 1000,
+            threeOrigin: null,
+            // At what coordinates was the sceneOrigin when we first layed everything out
+            initialSceneOriginLatLng: new L.LatLng(Lat0, Lng0),
+            heightScale: null,
+
+            geoJSON: function (x) {
+                data = x;
+                this._resetScene();
+                this._animateInObjects();
+            },
+
+            initialize: function (options) {
+                options = L.Util.setOptions(this, options);
+                this.data = [];
+                this.material = new THREE.MeshBasicMaterial({
+                    //map: this.texture,
+                    color: 0x000000,
+                    shading: THREE.FlatShading,
+                    opacity: 0,
+                    overdraw: true,
+                    //side: THREE.DoubleSide,
+                    wireframe: false
+                });
+                this.otherMaterial = new THREE.MeshBasicMaterial({
+                    //map: texture,
+                    color: 0x000000,
+                    opacity: 1,
+                    overdraw: true,
+                    side: THREE.DoubleSide,
+                    wireframe: false
+                });
+            },
+
+            _move: function () {
+
+            },
+
+            _initScene: function () {
+                this.container = document.getElementById( 'both' );
+                this.camera = new THREE.PerspectiveCamera(this.vFOV, this.map._size.x / this.map._size.y, 1, 1000);
+                this.camera.position.x = 0;
+                this.camera.position.y = 0;
+                this.camera.position.z = this.cameraHeight;
+                this.scene = new THREE.Scene();
+                this.renderer = new THREE.CanvasRenderer({alpha: true});
+                //this.renderer.setPixelRatio( window.devicePixelRatio );
+                this.renderer.setSize( 400, 400 );
+                this._el = L.DomUtil.create('div', 'sg-3d-layer leaflet-zoom-hide');
+                this._el.appendChild(this.renderer.domElement);
+                this.map.getPanes().overlayPane.appendChild(this._el);
+            },
+
+            _resetScene: function () {
+                var that = this;
+                this.camera.aspect = this.map._size.x / this.map._size.y;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(this.map._size.x, this.map._size.y);
+                function degToRad (angle) { return angle * Math.PI / 180; }
+                // How many vertical scene units can we see? (https://github.com/mrdoob/three.js/issues/1239)
+                // Useful diagram: http://techpubs.sgi.com/library/dynaweb_docs/0650/SGI_Developer/books/Perf_PG/sgi_html/figures/04.3.frustum.gif
+                var visibleHeight = 2 * Math.tan(degToRad(this.vFOV) / 2) * this.cameraHeight;
+                var scale = that.map._size.y / visibleHeight;
+                this.threeOrigin = new L.Point(this.map._size.x / 2, this.map._size.y / 2);
+                // ScenePoint: x,y coord in the THREE scene
+                // LatLng: x,y coord in the reference system
+                // containerPoint: x,y coord on the screen
+                this.latLngToScenePoint = function latLngToScenePoint (latLng) {
+                    var containerPoint = that.map.latLngToContainerPoint(latLng);
+                    return new L.Point(
+                        (containerPoint.x - that.threeOrigin.x) * (1 / scale),
+                        // Need to flip the y-axis
+                        -1 * (containerPoint.y - that.threeOrigin.y) * (1 / scale)
+                    );
+                }
+                var degreesLatVisible = this.map.containerPointToLatLng([0, this.map._size.y]).lat -
+                    this.map.containerPointToLatLng([0, 0]).lat;
+                this.heightScale = degreesLatVisible / visibleHeight;
+                this._drawObjects();
+            },
+
+            _startRenderLoop: function () {
+                var that = this;
+                var stats = new Stats();
+                stats.domElement.style.cssText = 'position: absolute; top: 0px; right: 0px';
+                document.body.appendChild(stats.domElement);
+                var lastPos = null;
+                function render() {
+                    requestAnimationFrame(render);
+                    //setInterval(render,1000/6);
+
+                    function render2() {
+                        if ( video.readyState === video.HAVE_ENOUGH_DATA ) {
+                            imageContext.drawImage( video, 0, 0 );
+                            if ( texture ) texture.needsUpdate = true;
+                        }
+                        that.renderer.render( that.scene, that.camera );
+                    }
+                    render2();
+
+                    TWEEN.update();
+
+                    var scenePoint = that.latLngToScenePoint(that.initialSceneOriginLatLng);
+                    that.group.position.x = scenePoint.x;
+                    that.group.position.y = scenePoint.y;
+                    that.renderer.render(that.scene, that.camera);
+
+                    var curPos = that.map.containerPointToLayerPoint([0, 0]);
+                    if (lastPos === null || !(lastPos.x === curPos.x && lastPos.y === curPos.x)) {
+                        L.DomUtil.setPosition(that._el, lastPos = curPos);
+                    }
+
+                    stats.update();
+                }
+                render();
+            },
+
+            addTo: function (map) {
+                map.addLayer(this);
+                return this;
+            },
+
+            remove: function (map) {
+                map.removeLayer(this);
+                return this;
+            },
+
+            onAdd: function (map) {
+                var that = this;
+                this.map = map;
+                if (this.renderer) {
+                    // TODO: re-adding behavior
+                } else {
+                    this._initScene();
+                    this._resetScene();
+                    this._startRenderLoop();
+                }
+                this.map.on({
+                    move: this._move,
+                    viewreset: this._resetScene
+                }, this);
+                window.addEventListener('resize', function () { that._resetScene(); }, false);
+            },
+
+            _geoJSONGeometryToShape: function (geometry) {
+                if (geometry.type !== "Polygon") {
+                    throw "Only Polygons are currently supported";
+                }
+                var vertices = geometry.coordinates[0];
+                var pts = [];
+                for (var i = 0; i < vertices.length; ++i) {
+                    var ppt = this.latLngToScenePoint(L.latLng(vertices[i][1], vertices[i][0]), 1);
+                    pts.push(new THREE.Vector2(ppt.x, ppt.y));
+                }
+                var shape = new THREE.Shape();
+                shape.fromPoints(pts);
+                return shape;
+            },
+
+            _drawObjects: function () {
+                if (this.group) {
+                    this.scene.remove(this.group);
+                }
+                this.group = new THREE.Object3D();
+                var building, geometry, shape, plane;
+                var extrudeSettings = {
+                    amount: 0,
+                    bevelEnabled: false
+                };
+                building = data.features[0].geometry;
+                shape = this._geoJSONGeometryToShape(building);
+                geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+                var pto0 = this.latLngToScenePoint(building.coordinates[0][0]);
+                var pto1 = this.latLngToScenePoint(building.coordinates[0][1]);
+                var pto2 = this.latLngToScenePoint(building.coordinates[0][2]);
+                var pto3 = this.latLngToScenePoint(building.coordinates[0][3]);
+                var alfa = Math.atan2((pto0.y - pto1.y), (pto0.x - pto1.x));
+                var largo = Math.abs((pto0.x - pto2.x));///Math.cos(alfa);
+                var ancho = Math.abs((pto0.y - pto2.y));///Math.cos(alfa);
+                plane = new THREE.PlaneGeometry(largo, ancho, 1, 1);
+                pto0.z = pto1.z = pto2.z = pto3.z = 0;
+                planeMesh = new THREE.Mesh(plane, this.otherMaterial);
+                this.group.add(planeMesh);
+                //this.group.rotateZ = alfa;
+                this.group.add(new THREE.Mesh(geometry, this.material));
+                this.scene.add(this.group);
+                var sceneOrigin = new L.Point(this.map._size.x / 2, this.map._size.y / 2);
+                this.initialSceneOriginLatLng = this.map.containerPointToLatLng(sceneOrigin);
+            },
+
+            _animateInObjects: function () {
+                var that = this;
+                var tween = new TWEEN.Tween({ z: 0.001 })
+                    .to({ z: 1 }, 600)
+                    .easing(TWEEN.Easing.Cubic.Out)
+                    .onUpdate(function () {
+                        that.group.scale.z = this.z;
+                    })
+                    .start();
+            },
+
+            _initStats: function () {
+                var container = document.createElement('div');
+                document.body.appendChild(container);
+                this.stats = new Stats();
+                this.stats.domElement.style.position = 'absolute';
+                this.stats.domElement.style.top = '0px';
+                container.appendChild(this.stats.domElement);
+            },
+
+            onRemove: function (map) {
+                //this.map = null;
+                map.off({
+                    move: this._move,
+                    viewreset: this._resetScene
+                }, this);
+                //this.container.parentNode.removeChild(this.container);
+            }
+        });
+
+        var sg3DLayer = new L.SG3DLayer();
+
+        function timeFlow() {
+            if (j > 0) {
+                sg3DLayer.remove(map);
+                L.SG3DLayer = L.SG3DLayer.extend({
+                    options: {
+                        _drawObjects: function () {
+                            if (this.group) {
+                                this.scene.remove(this.group);
+                            }
+                            this.group = new THREE.Object3D();
+                            var building, geometry, shape, plane;
+                            var extrudeSettings = {
+                                amount: 0,
+                                bevelEnabled: false
+                            };
+                            building = data.features[j].geometry;
+                            shape = this._geoJSONGeometryToShape(building);
+                            geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+                            var pto0 = this.latLngToScenePoint(building.coordinates[0][0]);
+                            var pto1 = this.latLngToScenePoint(building.coordinates[0][1]);
+                            var pto2 = this.latLngToScenePoint(building.coordinates[0][2]);
+                            var pto3 = this.latLngToScenePoint(building.coordinates[0][3]);
+                            var alfa = Math.atan2((pto0.y - pto1.y), (pto0.x - pto1.x));
+                            var largo = Math.abs((pto0.x - pto2.x));///Math.cos(alfa);
+                            var ancho = Math.abs((pto0.y - pto2.y));///Math.cos(alfa);
+                            plane = new THREE.PlaneGeometry(largo, ancho, 1, 1);
+                            pto0.z = pto1.z = pto2.z = pto3.z = 0;
+                            planeMesh = new THREE.Mesh(plane, this.otherMaterial);
+                            this.group.add(planeMesh);
+                            this.group.rotateZ = alfa;
+                            this.group.add(new THREE.Mesh(geometry, this.material));
+                            this.scene.add(this.group);
+                            var sceneOrigin = new L.Point(this.map._size.x / 2, this.map._size.y / 2);
+                            this.initialSceneOriginLatLng = this.map.containerPointToLatLng(sceneOrigin);
+                        }
+                    }
+                });
+            }
+            sg3DLayer = new L.SG3DLayer().addTo(map);
+            sg3DLayer.geoJSON(data);
+            j++;
+            if(j>=data.features.length){
+                j=0;
+            }
+        }
+
+        setInterval(timeFlow,1000*6/6)
+    }
+</script>
+
+</body>
+</html>

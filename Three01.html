@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Video Projection</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Language" content="en" />
+
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet/0.6.3/leaflet.css" />
+</head>
+<body>
+
+<div id="map" style="position: absolute; top: 0px; bottom: 0px; left: 0px; right: 0px"></div>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/zepto/1.0/zepto.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/leaflet/0.6.3/leaflet.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/three.js/r58/three.min.js"></script>
+<script src="js/tween.min.js"></script>
+<script src="js/three-stats.min.js"></script>
+
+<script>
+    var map = null;
+    var threeOrigin = null; //new L.Point(this.map._size.x / 2, this.map._size.y / 2);
+    var scale = 0;
+    function  geoJSONGeometryToShape(geometry) {
+        var vertices = geometry[0];
+        var pts = [];
+        for (var i = 0; i < vertices.length; i++) {
+            var ppt = latLngToScenePoint(L.latLng(vertices[i][1], vertices[i][0]), 1)
+            pts.push(new THREE.Vector2(ppt.x, ppt.y));
+        }
+        var shape = new THREE.Shape();
+        shape.fromPoints(pts)
+        return shape;
+    }
+
+    function latLngToScenePoint (latLng) {
+        var containerPoint = map.latLngToContainerPoint(latLng);
+        return new L.Point(
+            (containerPoint.x - threeOrigin.x) * (1 / scale),
+            // Need to flip the y-axis
+            -1 * (containerPoint.y - threeOrigin.y) * (1 / scale)
+        );
+    }
+
+    function degToRad (angle) { return angle * Math.PI / 180; }
+
+    setTimeout(function(){
+
+        map = L.map("map", {
+            minZoom: 1,
+            maxZoom: 18
+        });
+
+        map.setView([40, -3], 1);
+
+        threeOrigin = new L.Point(map._size.x / 2, map._size.y / 2);
+
+        var cameraHeight=1000, vFOV=60;
+
+        var visibleHeight = 2 * Math.tan(degToRad(vFOV) / 2) * cameraHeight;
+
+        scale = map._size.y / visibleHeight;
+
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+            mapId: "v1-1-5",
+            tileSize: 350,
+            minZoom: 1,
+            maxZoom: 18,
+            noWrap: true,
+            id: 'mapbox.streets'
+        }).addTo(map);
+
+        var camera = new THREE.PerspectiveCamera(vFOV, map._size.x / map._size.y, 1, 1000);
+        camera.position.x = 0;
+        camera.position.y = 0;
+        camera.position.z = cameraHeight;
+
+        var scene = new THREE.Scene();
+
+        var renderer = new THREE.CanvasRenderer();
+
+        var _el = L.DomUtil.create('div', 'sg-3d-layer leaflet-zoom-hide');
+        _el.appendChild(renderer.domElement);
+        map.getPanes().overlayPane.appendChild(_el);
+
+        var group = new THREE.Object3D();
+
+        var building, geometry, material, mesh;
+        building={
+            "type":"Feature",
+            "geometry":{
+                "type": "Polygon",
+                "coordinates": [[[0, 0], [30, 0], [30, 30], [0, 30], [0, 0]]]
+            },
+            "TimeUS": 266586223,
+            "properties": {
+                "wallColor": "rgb(190, 190, 190)",
+                "roofColor": "rgb(175, 175, 175)",
+                "height": 599.27
+            }
+        }
+        geometry = new THREE.Geometry(geoJSONGeometryToShape(building.geometry.coordinates));
+        material = new THREE.MeshBasicMaterial({"color":"#ff0000"})
+        mesh = new THREE.Mesh(geometry, material);
+
+        scene.add(mesh)
+
+        var sceneOrigin = new L.Point(map._size.x / 2, map._size.y / 2);
+        var initialSceneOriginLatLng = map.containerPointToLatLng(sceneOrigin);
+    },500)
+</script>
+
+</body>
+</html>

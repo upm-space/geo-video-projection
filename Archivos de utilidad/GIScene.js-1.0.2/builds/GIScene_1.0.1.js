@@ -75,7 +75,8 @@ var GIScene = {
 	 */
 	idCounter:0
 };
-// auto detect librarypath
+
+// auto detect librarypath
 var scripts = document.getElementsByTagName('script');
 GIScene.LIBRARYPATH = scripts[scripts.length-1].src.replace(/\/GIScene\.js$/, '/');
 GIScene.LIBRARYPATH = GIScene.LIBRARYPATH.replace(/\/GIScene_.*\.js$/, '/');
@@ -4721,7 +4722,7 @@ THREE.EdgeShader2 = {
  *   original technique is made by ArKano22 (http://www.gamedev.net/topic/550699-ssao-no-halo-artifacts/)
  * - modifications
  * - modified to use RGBA packed depth texture (use clear color 1,1,1,1 for depth pass)
- * - made fog more compatible with three.js linear fog
+ * - made fog more compatible with Three.js linear fog
  * - refactoring and optimizations
  */
 
@@ -11799,7 +11800,8 @@ GIScene.Control.CameraLight = function (camera, light, config){
 		this.domElement = this.scene.canvas;
 		// var initialSpritePosition = GIScene.Utils.transformViewportCoordsToRelativeScreenCoords(new THREE.Vector2(0,0),this.domElement.offsetWidth, this.domElement.offsetHeight);
 		// this.sprite.position.set(initialSpritePosition.x,initialSpritePosition.y,0);
-		this.sprite.position.set(0,0,0);		this.scene.spriteRoot.add(this.sprite);
+		this.sprite.position.set(0,0,0);
+		this.scene.spriteRoot.add(this.sprite);
 		
 		//events
 		this.domElement.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );

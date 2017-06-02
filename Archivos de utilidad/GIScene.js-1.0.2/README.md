@@ -1,7 +1,7 @@
 # GIScene.js
 A 3D WebGIS framework. Based on Three.js. Easy to learn and customize.
 
-This project extends the fantastic capabilities of the 3D JavaScript library [three.js](https://github.com/mrdoob/three.js/) by adding GIS concepts like Layers, Controls, Coordinates, Projections and more.
+This project extends the fantastic capabilities of the 3D JavaScript library [Three.js](https://github.com/mrdoob/Three.js/) by adding GIS concepts like Layers, Controls, Coordinates, Projections and more.
 If you are familiar with the web mapping library [OpenLayers](http://openlayers.org/) you will find this library easy to use.
 You can use it for georeferenced 3D data, but it takes a lot of work from you no matter if your models are georeferenced or not.
 
