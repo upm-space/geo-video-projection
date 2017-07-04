@@ -2,58 +2,121 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Video Projection</title>
+    <title>Title</title>
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet/0.6.3/leaflet.css" />
-    <script src="//cdnjs.cloudflare.com/ajax/libs/zepto/1.0/zepto.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/leaflet/0.6.3/leaflet.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/zepto/1.0/zepto.min.js"></script>
     <script src="js/Three.js"></script>
     <script src="js/Projector.js"></script>
     <script src="js/CanvasRenderer.js"></script>
-    <script src="js/numeric-1.2.6.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <video id="myVideo" autoplay loop style="display:none">
+        <source src="https://stemkoski.github.io/Three.js/videos/sintel.ogv" type='video/ogg; codecs="theora, vorbis"'>
+    </video>
+    <script src="data/myGeoJsonLeafletCut.js"></script>
 </head>
 <body onload = init()>
-<div id="both" style="position: absolute; top: 0px; bottom: 0px; left: 0px; right: 0px">
-    <div id="map" style="position: absolute; top: 0px; bottom: 0px; left: 0px; right: 0px"></div>
-    <div id="three" style="width: 480px; height: 204px">
-        <video id="myVideo" autoplay loop style="display:block" src="https://stemkoski.github.io/Three.js/videos/sintel.ogv" type='video/ogg; codecs="theora, vorbis"'></video>
-        <canvas id="myCanvas" width="480" height="204"></canvas>
-    </div>
-</div>
+<div id="both" style="position: absolute; top: 0px; bottom: 0px; left: 0px; width: 600px"></div>
+<div id="mapid" style="position: absolute; top: 0px; bottom: 0px; right: 0px; left: 601px"></div>
 
 <script>
-    var map;
+    var map, mymap;
     var scene, camera, renderer, container;
     var video, image, imageContext, texture;
-    var group, planeMesh, mesh, data;
-    var j=-1, Lat0, Lng0, alfa=[], beta=[], gamma=[], delta=[], H, H1;
-    var div = document.getElementById('three');
-    var n=0, a=0, t0, renderStartTime, renderCurrentTime, renderTimeNow, renderTimeNext, reloj;
+    var group, planeMesh, mesh, data, myStyle;
+    var j=-1, k=0, Lat0, Lng0, alfa=[], beta=[], gamma=[], delta=[];
+    var a=0;
 
     video = document.getElementById( 'myVideo' );
-    image = document.getElementById( 'myCanvas' );
-    video.addEventListener( "loadedmetadata", function (e) {
-        image.width = this.videoWidth;
-        image.height = this.videoHeight;
-    }, false );
+    image = document.createElement( 'canvas' );
+    image.width = 480;
+    image.height = 204;
     imageContext = image.getContext( '2d' );
     imageContext.fillStyle = '#000000';
     imageContext.fillRect( 0, 0, image.width, image.height );
-
     texture = new THREE.VideoTexture( image );
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
     texture.needsUpdate = true;
 
+
     scene = new THREE.Scene();
-    container = document.getElementById( 'three' );
+    container = document.getElementById( 'both' );
     renderer = new THREE.CanvasRenderer({alpha: true});
 
     function init() {
-        $.get("data/myGeoJsonCut.json", function (data) {
-            //$.get("data/citi-field.geo5.json", function (data) {
+        $.get("data/myGeoJson.json", function (data) {
+            var coordenadas0 = data.features[0].geometry.coordinates[0];
+            Lng0 = (coordenadas0[0][0]+coordenadas0[1][0]+coordenadas0[2][0]+coordenadas0[3][0])/4;
+            Lat0 = (coordenadas0[0][1]+coordenadas0[1][1]+coordenadas0[2][1]+coordenadas0[3][1])/4;
             animate(data.features);
+            animateM();
         });
+    }
+
+    function animateM() {
+        mymap =new L.map('mapid');
+        var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        var osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
+        var osm = new L.TileLayer(osmUrl, {minZoom: 1, maxZoom: 27, attribution: osmAttrib});
+        mymap.setView(new L.LatLng(Lat0, Lng0),14);
+        mymap.addLayer(osm);
+
+        myStyle = {
+            "color": "#ffbb00",
+            "weight": 4,
+            "opacity": 0.65,
+            "fillOpacity": 0
+        };
+
+        geojson = L.geoJSON();
+
+        function represent(){
+            if (j>0){
+                geojson.clearLayers();
+            };
+            geojson = L.geoJSON(datamon.features[j], {
+                style: myStyle
+            }).addTo(mymap);
+
+            /*if (a == 0){
+             var currTime = new Date();
+             renderStartTime = currTime.getTime();
+             a = 1;
+             } // primer frame del renderizado, comienza el reloj
+             var currTime = new Date();
+             renderCurrentTime = currTime.getTime();
+             reloj = renderCurrentTime-renderStartTime ; // (ms)
+
+             // Hacemos un algoritmo para garantizar que el tiempo transcurrido de renderizado coincide con el del log.
+             renderTimeNow = data.features[j].TimeUS/1000-t0;
+             renderTimeNext = data.features[j+1].TimeUS/1000-t0;
+             if ( renderTimeNow - reloj < 0 ) { // Casos A y B
+             if ( renderTimeNext - reloj < 0 ) { // Caso B
+             while ( renderTimeNext - reloj < 0) {
+             j++;
+             renderTimeNext = data.features[j].TimeUS/1000-t0;
+             }
+             if(j>=data.features.length-1){
+             j=0;
+             renderStartTime = currTime.getTime();
+             t0=data.features[0].TimeUS/1000;
+             }
+             }
+             } else { // Caso C
+             while ( renderTimeNow - reloj > 0 ){
+             j--;
+             renderTimeNow = data.features[j].TimeUS/1000-t0;
+             }
+             if(j>=data.features.length-1){
+             j=0;
+             renderStartTime = currTime.getTime();
+             t0=data.features[0].TimeUS/1000;
+             }
+             }*/
+        }
+
+        setInterval(represent,10);
     }
 
     function Rotate( alfa ) {
@@ -70,86 +133,49 @@
         imageContext.fillRect( 0, 0, image.width, image.height );
     }
 
-    function getMatrixH(p0, p1, p2, p3, u0, u1, u2, u3) {
-        var A1 = [[u0.x, u0.y, 1,    0,    0, 0, -u0.x*p0.x, -u0.y*p0.x],
-                  [u1.x, u1.y, 1,    0,    0, 0, -u1.x*p1.x, -u1.y*p1.x],
-                  [u2.x, u2.y, 1,    0,    0, 0, -u2.x*p2.x, -u2.y*p2.x],
-                  [u3.x, u3.y, 1,    0,    0, 0, -u3.x*p3.x, -u3.y*p3.x],
-                  [   0,    0, 0, u0.x, u0.y, 1, -u0.x*p0.y, -u0.y*p0.y],
-                  [   0,    0, 0, u1.x, u1.y, 1, -u1.x*p1.y, -u1.y*p1.y],
-                  [   0,    0, 0, u2.x, u2.y, 1, -u2.x*p2.y, -u2.y*p2.y],
-                  [   0,    0, 0, u3.x, u3.y, 1, -u3.x*p3.y, -u3.y*p3.y]];
-        var b1 = [p0.x, p1.x, p2.x, p3.x, p0.y, p1.y, p2.y, p3.y];
-        var A1inv = numeric.inv(A1);
-        var c = numeric.dot(A1inv,b1);
-        c.push(1);
+    function DeformImageContext(p0, p1, p2, p3) {
+        var b=0,c=0;
 
-        var matrix = [[c[0], c[3], 0, c[6]],
-                      [c[1], c[4], 0, c[7]],
-                      [0   , 0   , 1, 0   ],
-                      [c[2], c[5], 0, c[8]]];
-        var det = numeric.det(matrix);
-        var matH = [];
-        for (var r = 0; r < 16; r++){
-            matH[r] = matrix[r]/(det)^(1/3);
-        }
-        var Ht = "matrix3d(" + matH.join(", ") + ")";
-        div.style["-webkit-transform"] = Ht; div.style["-moz-transform"] = Ht; div.style["-o-transform"] = Ht; div.style.transform = Ht;
-
-        var A0 = [[u0.x, u1.x, u2.x], [u0.y, u1.y, u2.y], [1, 1, 1]];
-        var b0 = [u3.x, u3.y, 1];
-        var A0inv = numeric.inv(A0);
-        var c0 = numeric.dot(A0inv,b0);
-        var A = [[c0[0]*u0.x, c0[1]*u1.x, c0[2]*u2.x], [c0[0]*u0.y, c0[1]*u1.y, c0[2]*u2.y], [c0[0], c0[1], c0[2]]];
-        var Ainv = numeric.inv(A);
-
-        var B0 = [[p0.x, p1.x, p2.x], [p0.y, p1.y, p2.y], [1, 1, 1]];
-        var d0 = [p3.x, p3.y, 1];
-        var B0inv = numeric.inv(B0);
-        var e0 = numeric.dot(B0inv,d0);
-        var B = [[e0[0]*p0.x, e0[1]*p1.x, e0[2]*p2.x], [e0[0]*p0.y, e0[1]*p1.y, e0[2]*p2.y], [e0[0], e0[1], e0[2]]];
-
-        var C = numeric.dot(B,Ainv);
-
-        H = new THREE.Matrix4();
-        H1 = new THREE.Matrix3();
-        H.set(c[0], c[3], 0, c[6],
-              c[1], c[4], 0, c[7],
-                 0,    0, 1,    0,
-              c[2], c[5], 0, c[8]);
-        H1.set(C[0], C[1], C[2],
-               C[3], C[4], C[5],
-               C[6], C[7], C[8]);
-
-        return H, H1
+        imageContext.setTransform(1,b,c,1,0,0);
     }
 
-    function ChangeUVs(geometry, p0, p1, p2, p3, alfa) {
+    function Deform(alfa, geometry, h) {
+        var matrix = new THREE.Matrix4();
+
+        matrix.set( 1, alfa, 0, 0, alfa, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 );
+        //matrix.set( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1/h, 1 );
+
+        /*
+         matrix.set( Math.cos(alfa), Math.sin(alfa), 0, 0,
+         Math.sin(alfa), Math.cos(alfa), 0, 0,
+         0, 0, 1, 0,
+         0, 0, 0, 1 );
+         */
+
+        geometry.applyMatrix(matrix);
+    }
+
+    function ChangeUVs(geometry, p0, p1, p2, p3) {
         geometry.computeBoundingBox();
         var max = geometry.boundingBox.max, min = geometry.boundingBox.min;
         var offset = new THREE.Vector2(0 - min.x, 0 - min.y);
         var range = new THREE.Vector2(max.x - min.x, max.y - min.y);
         var faces = geometry.faces;
-        /*
         geometry.faceVertexUvs[0] = [];
-        for (var i = 0; i < faces.length ; i++) {
-            var v1 = geometry.vertices[faces[i].a];
-            var v2 = geometry.vertices[faces[i].b];
-            var v3 = geometry.vertices[faces[i].c];
-            geometry.faceVertexUvs[0].push([
-                new THREE.Vector3((v1.x + offset.x)/range.x, (v1.y + offset.y)/range.y, 0),
-                new THREE.Vector3((v2.x + offset.x)/range.x, (v2.y + offset.y)/range.y, 0),
-                new THREE.Vector3((v3.x + offset.x)/range.x, (v3.y + offset.y)/range.y, 0)
-            ]);
-        }
-        */
-        var u2 = new THREE.Vector3((p2.x + offset.x)/range.x, (p2.y + offset.y)/range.y, 1);
-        var u1 = new THREE.Vector3((p1.x + offset.x)/range.x, (p1.y + offset.y)/range.y, 1);
-        var u0 = new THREE.Vector3((p0.x + offset.x)/range.x, (p0.y + offset.y)/range.y, 1);
-        var u3 = new THREE.Vector3((p3.x + offset.x)/range.x, (p3.y + offset.y)/range.y, 1);
 
-        getMatrixH(p0, p1, p2, p3, u0, u1, u2, u3);
-
+        geometry.faceVertexUvs[0].push([new THREE.Vector3(p1.x, p1.y, 0), new THREE.Vector3(p0.x, p0.y, 0), new THREE.Vector3(p2.x, p2.y, 0)]);
+        /*
+         for (var i = 0; i < faces.length ; i++) {
+         var v1 = geometry.vertices[faces[i].a];
+         var v2 = geometry.vertices[faces[i].b];
+         var v3 = geometry.vertices[faces[i].c];
+         geometry.faceVertexUvs[0].push([
+         new THREE.Vector3((v1.x + offset.x)/range.x, (v1.y + offset.y)/range.y, 0),
+         new THREE.Vector3((v2.x + offset.x)/range.x, (v2.y + offset.y)/range.y, 0),
+         new THREE.Vector3((v3.x + offset.x)/range.x, (v3.y + offset.y)/range.y, 0)
+         ]);
+         }
+         */
         geometry.uvsNeedUpdate = true;
     }
 
@@ -157,12 +183,12 @@
         var coordenadas0 = data[0].geometry.coordinates[0];
         Lng0 = (coordenadas0[0][0]+coordenadas0[1][0]+coordenadas0[2][0]+coordenadas0[3][0])/4;
         Lat0 = (coordenadas0[0][1]+coordenadas0[1][1]+coordenadas0[2][1]+coordenadas0[3][1])/4;
-        map = new L.Map('map');
         var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
         var osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
         var osm = new L.TileLayer(osmUrl, {minZoom: 1, maxZoom: 27, attribution: osmAttrib});
-        map.setView(new L.LatLng(Lat0, Lng0),15);
-        //map.setView(new L.LatLng(Lat0, Lng0),8);
+
+        map = new L.Map('both');
+        map.setView(new L.LatLng(Lat0, Lng0),14);
         map.addLayer(osm);
 
         L.SG3DLayer = L.Class.extend({
@@ -271,24 +297,24 @@
                 shape.lineTo(pts[0].x,pts[0].y);
                 shape.autoClose = true;
                 /*
-                try {
-                    if(pts[0].x == pts[1].x)  throw "Please, zoom in";
-                    if(pts[2].x == pts[3].x)  throw "Please, zoom in";
-                    if(pts[0].y == pts[1].y)  throw "Please, zoom in";
-                    if(pts[2].y == pts[3].y)  throw "Please, zoom in";
-                    if(pts[0].x == pts[2].x)  throw "Please, zoom in";
-                    if(pts[1].x == pts[3].x)  throw "Please, zoom in";
-                    if(pts[0].y == pts[2].y)  throw "Please, zoom in";
-                    if(pts[1].y == pts[3].y)  throw "Please, zoom in";
-                    if(pts[0].x == pts[3].x)  throw "Please, zoom in";
-                    if(pts[2].x == pts[1].x)  throw "Please, zoom in";
-                    if(pts[0].y == pts[3].y)  throw "Please, zoom in";
-                    if(pts[2].y == pts[1].y)  throw "Please, zoom in";
-                }
-                catch(err){
-                    alert( err );
-                }
-                */
+                 try {
+                 if(pts[0].x == pts[1].x)  throw "Please, zoom in";
+                 if(pts[2].x == pts[3].x)  throw "Please, zoom in";
+                 if(pts[0].y == pts[1].y)  throw "Please, zoom in";
+                 if(pts[2].y == pts[3].y)  throw "Please, zoom in";
+                 if(pts[0].x == pts[2].x)  throw "Please, zoom in";
+                 if(pts[1].x == pts[3].x)  throw "Please, zoom in";
+                 if(pts[0].y == pts[2].y)  throw "Please, zoom in";
+                 if(pts[1].y == pts[3].y)  throw "Please, zoom in";
+                 if(pts[0].x == pts[3].x)  throw "Please, zoom in";
+                 if(pts[2].x == pts[1].x)  throw "Please, zoom in";
+                 if(pts[0].y == pts[3].y)  throw "Please, zoom in";
+                 if(pts[2].y == pts[1].y)  throw "Please, zoom in";
+                 }
+                 catch(err){
+                 alert( err );
+                 }
+                 */
                 return shape;
             },
 
@@ -299,7 +325,7 @@
                     requestAnimationFrame(render);
                     function render2() {
                         if ( video.readyState === video.HAVE_ENOUGH_DATA ) {
-                            imageContext.drawImage(video, 0, 0);
+                            imageContext.drawImage( video, 0, 0 );
                             if ( texture ) texture.needsUpdate = true;
                         }
                         that.renderer.render( that.scene, that.camera );
@@ -359,81 +385,81 @@
 
         function timeFlow() {
             /*
-            t0=data[0].TimeUS/1000;
-            if (a == 0){
-                renderStartTime = new Date().getTime();
-                a = 1;
-            }
-            // primer frame del renderizado, comienza el reloj
-            var currTime = new Date();
-            var tolpos = 1e-3;
-            var tolneg = 1e-6;
-            renderCurrentTime = currTime.getTime();
-            reloj = renderCurrentTime-renderStartTime ; // (ms)
-            // Hacemos un algoritmo para garantizar que el tiempo transcurrido de renderizado coincide con el del log.
-            renderTimeNow = data[j].TimeUS/1000-t0;
-            renderTimeNext = data[j+1].TimeUS/1000-t0;
-            if ( renderTimeNow - reloj < tolpos ) { // Casos A y B
-                if ( renderTimeNext - reloj < tolpos ) { // Caso B
-                    while ( renderTimeNext - reloj < tolpos) {
-                        j++;// Condición para que se reinicie al final del bucleif(j>=data.length-1){j=0;renderStartTime = currTime.getTime();break
-                    }
-                    renderTimeNext = data[j].TimeUS/1000-t0;
-                }
-            } else { // Caso C
-                while ( renderTimeNow - reloj > tolneg ){
-                    j--;
-                    renderTimeNow = data[j].TimeUS/1000-t0;
-                }
-            }
-            */
+             t0=data[0].TimeUS/1000;
+             if (a == 0){
+             renderStartTime = new Date().getTime();
+             a = 1;
+             }
+             // primer frame del renderizado, comienza el reloj
+             var currTime = new Date();
+             var tolpos = 1e-3;
+             var tolneg = 1e-6;
+             renderCurrentTime = currTime.getTime();
+             reloj = renderCurrentTime-renderStartTime ; // (ms)
+             // Hacemos un algoritmo para garantizar que el tiempo transcurrido de renderizado coincide con el del log.
+             renderTimeNow = data[j].TimeUS/1000-t0;
+             renderTimeNext = data[j+1].TimeUS/1000-t0;
+             if ( renderTimeNow - reloj < tolpos ) { // Casos A y B
+             if ( renderTimeNext - reloj < tolpos ) { // Caso B
+             while ( renderTimeNext - reloj < tolpos) {
+             j++;// Condición para que se reinicie al final del bucleif(j>=data.length-1){j=0;renderStartTime = currTime.getTime();break
+             }
+             renderTimeNext = data[j].TimeUS/1000-t0;
+             }
+             } else { // Caso C
+             while ( renderTimeNow - reloj > tolneg ){
+             j--;
+             renderTimeNow = data[j].TimeUS/1000-t0;
+             }
+             }
+             */
             j++;
             if(j >= data.length - 0){
-                imageContext.resetTransform();
+                //Rotate( -(alfa[0] - alfa[j-1]) );
                 j=0;
-                n++
             }
             console.log(j);
+
             var coordenadas = data[j].geometry.coordinates[0];
             var pto0 = sg3DLayer.latLngToScenePoint(new L.LatLng(coordenadas[0][1],coordenadas[0][0]));
             var pto1 = sg3DLayer.latLngToScenePoint(new L.LatLng(coordenadas[1][1],coordenadas[1][0]));
             var pto2 = sg3DLayer.latLngToScenePoint(new L.LatLng(coordenadas[2][1],coordenadas[2][0]));
             var pto3 = sg3DLayer.latLngToScenePoint(new L.LatLng(coordenadas[3][1],coordenadas[3][0]));
-            var points = [[pto0.x, pto0.y], [pto1.x, pto1.y], [pto2.x, pto2.y], [pto3.x, pto3.y]];
             var l1 = Math.abs(pto1.x - pto2.x), l2 = Math.abs(pto0.x - pto1.x);
             var a1 = Math.abs(pto1.y - pto2.y), a2 = Math.abs(pto0.y - pto1.y);
             var largo = Math.sqrt(a2*a2+l2*l2);
             var ancho = Math.sqrt(a1*a1+l1*l1);
 
-            if (n<1){
-                alfa.push(Math.atan2(((pto2.y+pto1.y)/2 - (pto3.y+pto0.y)/2), ((pto2.x+pto1.x)/2 - (pto3.x+pto0.x)/2)));
-                beta.push(Math.atan2(((pto2.y+pto3.y)/2 - (pto1.y+pto0.y)/2), ((pto2.x+pto3.x)/2 - (pto1.x+pto0.x)/2)));
-                gamma.push(Math.atan2(((pto2.y+pto1.y)/2 - (pto3.y+pto0.y)/2), ((pto2.x+pto1.x)/2 - (pto3.x+pto0.x)/2)));
-                delta.push(Math.atan2(((pto2.y+pto3.y)/2 - (pto1.y+pto0.y)/2), ((pto2.x+pto3.x)/2 - (pto1.x+pto0.x)/2)));
-            }
+            alfa.push(Math.atan2(((pto2.y+pto1.y)/2 - (pto3.y+pto0.y)/2), ((pto2.x+pto1.x)/2 - (pto3.x+pto0.x)/2)));
+            beta.push(Math.atan2(((pto2.y+pto3.y)/2 - (pto1.y+pto0.y)/2), ((pto2.x+pto3.x)/2 - (pto1.x+pto0.x)/2)));
+            gamma.push(Math.atan2(((pto2.y+pto1.y)/2 - (pto3.y+pto0.y)/2), ((pto2.x+pto1.x)/2 - (pto3.x+pto0.x)/2)));
+            delta.push(Math.atan2(((pto2.y+pto3.y)/2 - (pto1.y+pto0.y)/2), ((pto2.x+pto3.x)/2 - (pto1.x+pto0.x)/2)));
+            //image.width = largo;
+            //image.height = ancho;
+
+            //Rotate( -(alfa[j]-alfa[j-1]) );
 
             sg3DLayer.group.remove(mesh);
             var building = data[j].geometry;
             var shape = sg3DLayer._geoJSONGeometryToShape(building);
             var geometry = new THREE.ShapeGeometry(shape,1);
-            ChangeUVs(geometry,pto0,pto1,pto2,pto3,alfa[j], largo, ancho);
+            ChangeUVs(geometry,pto0,pto1,pto2,pto3);
 
+            //DeformImageContext(pto0,pto1,pto2,pto3);
             mesh = new THREE.Mesh(geometry, sg3DLayer.otherMaterial);
-            //sg3DLayer.group.add(mesh);
-
-            //Rotate( -(alfa[j]-alfa[j-1]) );
+            sg3DLayer.group.add(mesh);
 
             sg3DLayer.group.remove(planeMesh);
             plane = new THREE.PlaneGeometry(largo, ancho, 1, 1);
+            //Deform(-(alfa[j]-alfa[j-1]), plane, data[j].properties.heigth);
             planeMesh = new THREE.Mesh(plane, sg3DLayer.otherMaterial);
-            //planeMesh.applyMatrix(H);
-            //planeMesh.position.x = (pto0.x + pto1.x + pto2.x + pto3.x)/4;
-            //planeMesh.position.y = (pto0.y + pto1.y + pto2.y + pto3.y)/4;
-            //planeMesh.rotation.z = alfa[j];
-            //sg3DLayer.group.add(planeMesh);
+            planeMesh.position.x = (pto1.x + pto3.x)/2;
+            planeMesh.position.y = (pto1.y + pto3.y)/2;
+            sg3DLayer.group.add(planeMesh);
+            planeMesh.rotation.z = alfa[j];
         }
 
-        setInterval(timeFlow,10*6/6);
+        setTimeout(function(){setInterval(timeFlow,10*6/6)},500);
     }
 </script>
 

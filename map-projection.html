@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" integrity="sha512-07I2e+7D8p6he1SIM+1twR5TIrhUQn9+I6yjqD53JQjFiMf8EtC93ty0/5vJTZGF8aAocvHYNEDJajGdNx1IsQ==" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js" integrity="sha512-A7vV8IFfih/D732iSSKi20u/ooOfj/AGehOKq0f4vLT1Zr2Y+RX7C+w8A1gaSasGtRUZpF/NZgzSAu4/Gc41Lg==" crossorigin=""></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <script src="data/myGeoJsonLeaflet.js"></script>
+    <script src="data/myGeoJsonLeafletCut.js"></script>
 
 
 </head>
@@ -22,9 +22,16 @@
 
 <div id="mapid" style="position: absolute; top: 0px; bottom: 0px; left: 0px; right: 0px"></div>
 <script>
-    var Lng=(data.features[0].geometry.coordinates[0][0][0]+data.features[0].geometry.coordinates[0][2][0])/2;
-    var Lat=(data.features[0].geometry.coordinates[0][0][1]+data.features[0].geometry.coordinates[0][2][1])/2;
+    var Lng=(datamon.features[0].geometry.coordinates[0][0][0]+datamon.features[0].geometry.coordinates[0][2][0])/2;
+    var Lat=(datamon.features[0].geometry.coordinates[0][0][1]+datamon.features[0].geometry.coordinates[0][2][1])/2;
 
+    var mymap =new L.map('mapid');
+    var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    var osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
+    var osm = new L.TileLayer(osmUrl, {minZoom: 1, maxZoom: 27, attribution: osmAttrib});
+    mymap.setView(new L.LatLng(Lat, Lng),14);
+    mymap.addLayer(osm);
+    /*
     var mymap = L.map('mapid').setView([Lat, Lng], 16);
 
     L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
@@ -34,7 +41,7 @@
         'Imagery © <a href="http://mapbox.com">Mapbox</a>',
         id: 'mapbox.streets'
     }).addTo(mymap);
-
+*/
     var myStyle = {
         "color": "#ffbb00",
         "weight": 4,
@@ -44,13 +51,11 @@
 
     var geojson = L.geoJSON();
 
-    var j=3600, a=0, renderStartTime=0, renderCurrentTime=0, renderTimeNow=0, renderTimeNext=0, reloj=0;
-    var t0=data.features[0].TimeUS/1000;
+    var j=0, a=0, renderStartTime=0, renderCurrentTime=0, renderTimeNow=0, renderTimeNext=0, reloj=0;
+    var t0=datamon.features[0].TimeUS/1000;
     function represent(){
-        if (j>0){
-            geojson.clearLayers();
-        };
-        geojson = L.geoJson(data.features[j], {
+        geojson.clearLayers();
+        geojson = L.geoJSON(datamon.features[j], {
             style: myStyle
         }).addTo(mymap);
 
@@ -64,33 +69,33 @@
         reloj = renderCurrentTime-renderStartTime ; // (ms)
 
         // Hacemos un algoritmo para garantizar que el tiempo transcurrido de renderizado coincide con el del log.
-        renderTimeNow = data.features[j].TimeUS/1000-t0;
-        renderTimeNext = data.features[j+1].TimeUS/1000-t0;
+        renderTimeNow = datamon.features[j].TimeUS/1000-t0;
+        renderTimeNext = datamon.features[j+1].TimeUS/1000-t0;
         if ( renderTimeNow - reloj < 0 ) { // Casos A y B
             if ( renderTimeNext - reloj < 0 ) { // Caso B
                 while ( renderTimeNext - reloj < 0) {
                     j++;
-                    renderTimeNext = data.features[j].TimeUS/1000-t0;
+                    renderTimeNext = datamon.features[j].TimeUS/1000-t0;
                 }
-                if(j>=data.features.length-1){
+                if(j>=datamon.features.length-1){
                     j=0;
                     renderStartTime = currTime.getTime();
-                    t0=data.features[0].TimeUS/1000;
+                    t0=datamon.features[0].TimeUS/1000;
                 }
             }
         } else { // Caso C
             while ( renderTimeNow - reloj > 0 ){
                 j--;
-                renderTimeNow = data.features[j].TimeUS/1000-t0;
+                renderTimeNow = datamon.features[j].TimeUS/1000-t0;
             }
-            if(j>=data.features.length-1){
+            if(j>=datamon.features.length-1){
                 j=0;
                 renderStartTime = currTime.getTime();
-                t0=data.features[0].TimeUS/1000;
+                t0=datamon.features[0].TimeUS/1000;
             }
         }*/
         j++
-        if(j>=data.features.length){
+        if(j>=datamon.features.length){
             j=0;
         }
         console.log(j)
