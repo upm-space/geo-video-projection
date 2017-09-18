@@ -4,82 +4,73 @@
 
 var fs=require("fs");
 var proj4=require("proj4");
-var filename1="../data/coordenadasProyeccion.json";
-var filename2="../data/myGeoJsonLeaflet.js";
-var filename3="../data/myGeoJson.json";
-var json=require("../data/AHR2.json");
+var filename1="../data/coordenadasProyeccion2.json";
+var filename2="../data/logJson2.js";
+var filename3="../data/logJson2.json";
+var json=require("../data/47 11-07-2017 14-16-04.json");
 
-if(fs.existsSync(filename1)){
-    fs.unlinkSync(filename1);
-};
+if(fs.existsSync(filename1)){ fs.unlinkSync(filename1) }
+if(fs.existsSync(filename2)){ fs.unlinkSync(filename2) }
+if(fs.existsSync(filename3)){ fs.unlinkSync(filename3) }
 
-if(fs.existsSync(filename2)){
-    fs.unlinkSync(filename2);
-};
+var text1 = '{\n\t"Coordenadas" : [\n';
+var text2 = 'var data = {\n\t"type": "FeatureCollection",\n\t"features": [\n';
+var text3 = '{\n\t"type": "FeatureCollection",\n\t"features": [\n';
 
-if(fs.existsSync(filename3)){
-    fs.unlinkSync(filename3);
-};
+function obtainFootprints(xCP,yCP,altitude,hv,focal,AnchSens,LargSens,omega,phi,bearing){ return feedProjection(xCP,yCP,altitude,hv,focal,AnchSens,LargSens,omega,phi,bearing) }
 
-fs.appendFileSync(filename1,'{\n\t"Coordenadas" : [\n');
-fs.appendFileSync(filename2,'var data = {\n\t"type": "FeatureCollection",\n\t"features": [\n');
-fs.appendFileSync(filename3,'{\n\t"type": "FeatureCollection",\n\t"features": [\n');
-
-function obtainFootprints(xCP,yCP,altitude,hv,focal,AnchSens,LargSens,omega,phi,bearing,rumbo){
-    return feedProjection(xCP,yCP,altitude,hv,focal,AnchSens,LargSens,omega,phi,bearing,rumbo);
-}
-
-var xCP=0, yCP=0, HCP=0, omega=0, phi=0, kappa=0, time=0;
-var hv=600, AnchSens=0.3, LargSens=0.5, f=0.1, rumbo=0;
-
+var xCP=0, yCP=0, HCP=0, hv=0, omega=0, phi=0, kappa=0, time=0;
+var AnchSens=15.6, LargSens=23.5, f=16, cameraRollOffset=35;
 var x1=0, y1=0, x2=0, y2=0, x3=0, y3=0, x4=0, y4=0;
-var length=json.AHR2.length;
+var length=json.ATT.length;
 
-for (var j=0;j<length;j++){
-    xCP=json.AHR2[j].Lng;
-    yCP=json.AHR2[j].Lat;
-    HCP=json.AHR2[j].Alt;
-    omega=json.AHR2[j].Roll;
-    phi=json.AHR2[j].Pitch;
-    kappa=json.AHR2[j].Yaw;
-    time=json.AHR2[j].TimeUS;
+for (var j=2995-40;j<length;j++){
+    xCP=json.POS[j].Lng;
+    yCP=json.POS[j].Lat;
+    HCP=json.POS[j].Alt;
+    hv=HCP-json.POS[j].RelAlt;
+    if (Math.abs(json.ATT[j].Roll)<cameraRollOffset){
+        phi=0;
+    } else if (json.ATT[j].Roll>=cameraRollOffset) {
+        phi=-(json.ATT[j].Roll-cameraRollOffset);
+    } else {
+        phi=-(json.ATT[j].Roll+cameraRollOffset);
+    }
+    //omega=-json.ATT[j].Pitch;
+    kappa=json.ATT[j].Yaw;
+    time=json.ATT[j].TimeUS-json.ATT[0].TimeUS;
 
-    var result=obtainFootprints(xCP,yCP,HCP,hv,f,AnchSens,LargSens,omega,phi,kappa,rumbo);
+    var result=obtainFootprints(xCP,yCP,HCP,hv,f,AnchSens,LargSens,omega,phi,kappa);
 
-    x1=result[3].toFixed(13), y1=result[7].toFixed(13);
-    x2=result[2].toFixed(13), y2=result[6].toFixed(13);
-    x3=result[1].toFixed(13), y3=result[5].toFixed(13);
-    x4=result[0].toFixed(13), y4=result[4].toFixed(13);
-
-    if(j==length-1){
-        fs.appendFileSync(filename1,'\t\t{\n\t\t\t"x1" : "'+x1+'",\t"y1" : "'+y1+'",\n\t\t\t"x2" : "'+x2+'",\t"y2" : "'+y2+'",\n\t\t\t"x3" : "'+x3+'",\t"y3" : "'+y3+'",\n\t\t\t"x4" : "'+x4+'",\t"y4" : "'+y4+'",\n\t\t\t"TimeUS": "'+time+'",\n\t\t\t"height": "'+HCP+'"\n\t\t}\n');
-    }else{
-        fs.appendFileSync(filename1,'\t\t{\n\t\t\t"x1" : "'+x1+'",\t"y1" : "'+y1+'",\n\t\t\t"x2" : "'+x2+'",\t"y2" : "'+y2+'",\n\t\t\t"x3" : "'+x3+'",\t"y3" : "'+y3+'",\n\t\t\t"x4" : "'+x4+'",\t"y4" : "'+y4+'",\n\t\t\t"TimeUS": "'+time+'",\n\t\t\t"height": "'+HCP+'"\n\t\t},\n');
-    };
-
-    if(j==length-1){
-        fs.appendFileSync(filename2,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]]\n\t\t\t},\n\t\t\t"TimeUS": '+time+',\n\t\t\t"properties": {\n\t\t\t\t"wallColor": "rgb(190, 190, 190)",\n\t\t\t\t"roofColor": "rgb(175, 175, 175)",\n\t\t\t\t"height": '+HCP+'\n\t\t\t}\n\t\t}\n');
-    }else{
-        fs.appendFileSync(filename2,'\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]]\n\t\t\t},\n\t\t\t"TimeUS": '+time+',\n\t\t\t"properties": {\n\t\t\t\t"wallColor": "rgb(190, 190, 190)",\n\t\t\t\t"roofColor": "rgb(175, 175, 175)",\n\t\t\t\t"height": '+HCP+'\n\t\t\t}\n\t\t},\n');
-    };
+    x1=result[2].toFixed(7); y1=result[6].toFixed(7);
+    x2=result[1].toFixed(7); y2=result[5].toFixed(7);
+    x3=result[0].toFixed(7); y3=result[4].toFixed(7);
+    x4=result[3].toFixed(7); y4=result[7].toFixed(7);
 
     /*
-    x1=(x1*500/180+500).toFixed(3), y1=(-y1*500/90+601).toFixed(3);
-    x2=(x2*500/180+500).toFixed(3), y2=(-y2*500/90+601).toFixed(3);
-    x3=(x3*500/180+500).toFixed(3), y3=(-y3*500/90+601).toFixed(3);
-    x4=(x4*500/180+500).toFixed(3), y4=(-y4*500/90+601).toFixed(3);
+    if(j==length-1){
+        text1 += '\t\t{\n\t\t\t"x1" : "'+x1+'",\t"y1" : "'+y1+'",\n\t\t\t"x2" : "'+x2+'",\t"y2" : "'+y2+'",\n\t\t\t"x3" : "'+x3+'",\t"y3" : "'+y3+'",\n\t\t\t"x4" : "'+x4+'",\t"y4" : "'+y4+'",\n\t\t\t"TimeUS": "'+time+'",\n\t\t\t"height": "'+HCP+'"\n\t\t}\n\t]\n}';
+    }else{
+        text1 += '\t\t{\n\t\t\t"x1" : "'+x1+'",\t"y1" : "'+y1+'",\n\t\t\t"x2" : "'+x2+'",\t"y2" : "'+y2+'",\n\t\t\t"x3" : "'+x3+'",\t"y3" : "'+y3+'",\n\t\t\t"x4" : "'+x4+'",\t"y4" : "'+y4+'",\n\t\t\t"TimeUS": "'+time+'",\n\t\t\t"height": "'+HCP+'"\n\t\t},\n';
+    }
+
+    if(j==length-1){
+        text2 += '\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]]\n\t\t\t},\n\t\t\t"TimeUS": '+time+'\n\t\t}\n\t]\n}';
+    }else{
+        text2 += '\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+']]]\n\t\t\t},\n\t\t\t"TimeUS": '+time+'\n\t\t},\n';
+    }
     */
 
     if(j==length-1){
-        fs.appendFileSync(filename3,'\t\t{\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+'], ['+x1+', '+y1+']]]\n\t\t\t},\n\t\t\t"TimeUS": '+time+',\n\t\t\t"type":"Feature",\n\t\t\t"properties": {\n\t\t\t\t"wallColor": "rgb(190, 190, 190)",\n\t\t\t\t"roofColor": "rgb(175, 175, 175)",\n\t\t\t\t"height": '+HCP+'\n\t\t\t}\n\t\t}\n');
+        text3 += '\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+'], ['+x1+', '+y1+']]]\n\t\t\t},\n\t\t\t"TimeUS": '+time+'\n\t\t}\n\t]\n}';
     }else{
-        fs.appendFileSync(filename3,'\t\t{\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+'], ['+x1+', '+y1+']]]\n\t\t\t},\n\t\t\t"TimeUS": '+time+',\n\t\t\t"type":"Feature",\n\t\t\t"properties": {\n\t\t\t\t"wallColor": "rgb(190, 190, 190)",\n\t\t\t\t"roofColor": "rgb(175, 175, 175)",\n\t\t\t\t"height": '+HCP+'\n\t\t\t}\n\t\t},\n');
-    };
+        text3 += '\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+'], ['+x1+', '+y1+']]]\n\t\t\t},\n\t\t\t"TimeUS": '+time+'\n\t\t},\n';
+    }
 }
 
-fs.appendFileSync(filename1,'\t]\n}');
-fs.appendFileSync(filename2,'\t]\n}');
-fs.appendFileSync(filename3,'\t]\n}');
+//fs.appendFileSync(filename1, text1);
+//fs.appendFileSync(filename2, text2);
+fs.appendFileSync(filename3, text3);
 
 /*
  * @param xCP CoordenadaX del centroide
@@ -96,16 +87,10 @@ fs.appendFileSync(filename3,'\t]\n}');
  * @returns {Array} un array de cuatro elementos (los cuatro puntos). cada elemento contiene un array de tres elementos (X,Y,Z)
  */
 
-function feedProjection(xCP,yCP,HCP,hv,f,AnchSens,LargSens,omega,phi,kappa,rumbo){
-
+function feedProjection(xCP,yCP,HCP,hv,f,AnchSens,LargSens,omega,phi,kappa){
     //For proj4 to work, meteor add proj4:proj4 is needed.
-    proj4.defs([
-        [   'EPSG:4326',
-            '+title=WGS 84 (long/lat) +proj=longlat +ellps=WGS84 +datum=WGS84 +units=degrees'],
-    ]);
+    proj4.defs([['EPSG:4326', '+title=WGS 84 (long/lat) +proj=longlat +ellps=WGS84 +datum=WGS84 +units=degrees'],]);
     var utmzone;
-
-    var XCP=xCP, YCP=yCP;
 
     do {xCP-=360} while (xCP>180);
     do {xCP+=360} while (xCP<-180);
@@ -173,15 +158,14 @@ function feedProjection(xCP,yCP,HCP,hv,f,AnchSens,LargSens,omega,phi,kappa,rumbo
     if(168<=xCP && xCP<174){utmzone = '59'}
     if(174<=xCP && xCP<=180){utmzone = '60'}
 
-    var utm = "+proj=utm"+ " +zone="+ utmzone + "+ellps=GRS80 +units=m +no_defs"
+    var utm = "+proj=utm"+ " +zone="+ utmzone + "+ellps=GRS80 +units=m +no_defs";
 
-    var center = proj4('EPSG:4326',utm,[XCP,YCP]);
+    var center = proj4('EPSG:4326',utm,[xCP,yCP]);
 
     xCP=center[0];
     yCP=center[1];
 
-    kappa = kappa * Math.PI / 180 + Math.PI/2;
-    //kappa = kappa * Math.PI / 180;
+    kappa = kappa * Math.PI / 180;
     phi = phi * Math.PI / 180;
     omega = omega * Math.PI / 180;
     f = f / 1000; // pasamos de milímetros a metros
@@ -190,15 +174,16 @@ function feedProjection(xCP,yCP,HCP,hv,f,AnchSens,LargSens,omega,phi,kappa,rumbo
     var DiagSens= Math.sqrt((AnchSens*AnchSens)+(LargSens*LargSens));
     var DiagTerr=DiagSens*(HCP-hv)/f;
 
-    var a11= Math.cos(phi)*Math.cos(kappa), a21=-Math.cos(phi)*Math.sin(kappa), a31=Math.sin(phi),a12=Math.cos(omega)*Math.sin(kappa)+Math.sin(omega)*Math.sin(phi)*Math.cos(kappa);
-    var a22=Math.cos(omega)*Math.cos(kappa)-Math.sin(omega)*Math.sin(phi)*Math.sin(kappa), a32= -Math.sin(omega)*Math.cos(phi), a13=Math.sin(omega)*Math.sin(kappa)-Math.cos(omega)*Math.sin(phi)*Math.cos(kappa);
-    var a23=Math.sin(omega)*Math.cos(kappa)+Math.cos(omega)*Math.sin(phi)*Math.sin(kappa), a33=Math.cos(omega)*Math.cos(phi);
+    var a11= Math.cos(phi)*Math.cos(kappa),                                                 a21=-Math.cos(phi)*Math.sin(kappa),                                                 a31=Math.sin(phi);
+    var a12=Math.cos(omega)*Math.sin(kappa)+Math.sin(omega)*Math.sin(phi)*Math.cos(kappa),  a22=Math.cos(omega)*Math.cos(kappa)-Math.sin(omega)*Math.sin(phi)*Math.sin(kappa),  a32= -Math.sin(omega)*Math.cos(phi);
+    var a13=Math.sin(omega)*Math.sin(kappa)-Math.cos(omega)*Math.sin(phi)*Math.cos(kappa),  a23=Math.sin(omega)*Math.cos(kappa)+Math.cos(omega)*Math.sin(phi)*Math.sin(kappa),  a33=Math.cos(omega)*Math.cos(phi);
 
-    var MatrizRotT=[[a11,a12,a13],[a21,a22,a23],[a31,a32,a33]];
+    var MatrizRotT=[[a11,a12,a13],
+                    [a21,a22,a23],
+                    [a31,a32,a33]];
 
     var CP=[[xCP],[yCP],[HCP]];
     var CNsingiroT=[[xCP],[yCP],[HCP-hv]];
-
 
     /*
      var p1singiroT2=[[CNsingiroT[0][0]+ DiagTerr/2*Math.sin(Math.atan2(LargSens,AnchSens))],[CNsingiroT[1][0]+ DiagTerr/2*Math.cos(Math.atan2(LargSens,AnchSens))],[CNsingiroT[2][0]]];
@@ -215,12 +200,10 @@ function feedProjection(xCP,yCP,HCP,hv,f,AnchSens,LargSens,omega,phi,kappa,rumbo
      var p4singiroT=[[CNsingiroT[0][0] + 1.315*DiagTerr/2*Math.sin(Math.atan2(LargSens,AnchSens))],[CNsingiroT[1][0] - 1.315*DiagTerr/2*Math.cos(Math.atan2(LargSens,AnchSens))],[CNsingiroT[2][0]]];
      */
 
-
     var p1singiroT=[[CNsingiroT[0][0] + DiagTerr/2*Math.sin(Math.atan2(LargSens,AnchSens))],[CNsingiroT[1][0] + DiagTerr/2*Math.cos(Math.atan2(LargSens,AnchSens))],[CNsingiroT[2][0]]];
     var p2singiroT=[[CNsingiroT[0][0] - DiagTerr/2*Math.sin(Math.atan2(LargSens,AnchSens))],[CNsingiroT[1][0] + DiagTerr/2*Math.cos(Math.atan2(LargSens,AnchSens))],[CNsingiroT[2][0]]];
     var p3singiroT=[[CNsingiroT[0][0] - DiagTerr/2*Math.sin(Math.atan2(LargSens,AnchSens))],[CNsingiroT[1][0] - DiagTerr/2*Math.cos(Math.atan2(LargSens,AnchSens))],[CNsingiroT[2][0]]];
     var p4singiroT=[[CNsingiroT[0][0] + DiagTerr/2*Math.sin(Math.atan2(LargSens,AnchSens))],[CNsingiroT[1][0] - DiagTerr/2*Math.cos(Math.atan2(LargSens,AnchSens))],[CNsingiroT[2][0]]];
-
 
     var p1giro = arraySum(true,multiplyMatrix(MatrizRotT,arraySum(false, p1singiroT,CP)),CP);
     var p2giro = arraySum(true,multiplyMatrix(MatrizRotT,arraySum(false, p2singiroT,CP)),CP);
@@ -285,10 +268,10 @@ function arraySum(sumSub,a,b){
                 newRow.push(itemLine + b[counterRow][counterLine]);
             }else{
                 function obtainFootprints(xCP,yCP,altitude,hv,focal,AnchSens,LargSens,omega,phi,bearing){
-                    return feedProjection(xCP,yCP,altitude,hv,focal,AnchSens,LargSens,omega,phi,bearing,0);
+                    return feedProjection(xCP,yCP,altitude,hv,focal,AnchSens,LargSens,omega,phi,bearing);
                 }
 
-                obtainFootprints(xCP,yCP,HCP,hv,f,AnchSens,LargSens,omega,phi,kappa);
+                obtainFootprints(xCP,yCP,HCP,hv,f,AnchSens,LargSens,omega,phi,kappa,0);
 
                 /**
                  *
@@ -306,16 +289,17 @@ function arraySum(sumSub,a,b){
                  * @returns {Array} un array de cuatro elementos (los cuatro puntos). cada elemento contiene un array de tres elementos (X,Y,Z)
                  */
 
-                function feedProjection(xCP,yCP,HCP,hv,f,AnchSens,LargSens,omega,phi,kappa,rumbo){
+                function feedProjection(xCP,yCP,HCP,hv,f,AnchSens,LargSens,omega,phi,kappa){
                     //var xCP=10000, yCP=10000, HCP=1000, hv=600, AnchSens=0.3, LargSens=0.5, f=0.1,omega=pi/10, phi=pi/20, kappa=pi/ 6;
 
                     //For proj4 to work, meteor add proj4:proj4 is needed.
-                    proj4.defs([
-                        [
-                            'EPSG:4326',
-                            '+title=WGS 84 (long/lat) +proj=longlat +ellps=WGS84 +datum=WGS84 +units=degrees'],
-                    ]);
+                    proj4.defs([['EPSG:4326', '+title=WGS 84 (long/lat) +proj=longlat +ellps=WGS84 +datum=WGS84 +units=degrees'],]);
                     var utmzone;
+
+                    do {xCP-=360} while (xCP>180);
+                    do {xCP+=360} while (xCP<-180);
+                    do {yCP-=360} while (yCP>90);
+                    do {yCP+=360} while (yCP<-90);
 
                     if(-180<=xCP && xCP<-174){utmzone = '1'}
                     if(-174<=xCP && xCP<-168){utmzone = '2'}
@@ -385,18 +369,20 @@ function arraySum(sumSub,a,b){
                     xCP=center[0];
                     yCP=center[1];
 
-                    kappa = kappa * Math.PI / 180 + Math.PI/2;
+                    kappa = kappa * Math.PI / 180;
                     f = f / 1000; // pasamos de milímetros a metros
                     AnchSens = AnchSens / 1000; // pasamos de milímetros a metros
                     LargSens = LargSens / 1000; // pasamos de milímetros a metros
                     var DiagSens= Math.sqrt((AnchSens*AnchSens)+(LargSens*LargSens));
                     var DiagTerr=DiagSens*(HCP-hv)/f;
 
-                    var a11= Math.cos(phi)*Math.cos(kappa), a21=-Math.cos(phi)*Math.sin(kappa), a31=Math.sin(phi),a12=Math.cos(omega)*Math.sin(kappa)+Math.sin(omega)*Math.sin(phi)*Math.cos(kappa);
-                    var a22=Math.cos(omega)*Math.cos(kappa)-Math.sin(omega)*Math.sin(phi)*Math.sin(kappa), a32= -Math.sin(omega)*Math.cos(phi), a13=Math.sin(omega)*Math.sin(kappa)-Math.cos(omega)*Math.sin(phi)*Math.cos(kappa);
-                    var a23=Math.sin(omega)*Math.cos(kappa)+Math.cos(omega)*Math.sin(phi)*Math.sin(kappa), a33=Math.cos(omega)*Math.cos(phi);
+                    var a11= Math.cos(phi)*Math.cos(kappa),                                                 a21=-Math.cos(phi)*Math.sin(kappa),                                                 a31=Math.sin(phi);
+                    var a12=Math.cos(omega)*Math.sin(kappa)+Math.sin(omega)*Math.sin(phi)*Math.cos(kappa),  a22=Math.cos(omega)*Math.cos(kappa)-Math.sin(omega)*Math.sin(phi)*Math.sin(kappa),  a32= -Math.sin(omega)*Math.cos(phi);
+                    var a13=Math.sin(omega)*Math.sin(kappa)-Math.cos(omega)*Math.sin(phi)*Math.cos(kappa),  a23=Math.sin(omega)*Math.cos(kappa)+Math.cos(omega)*Math.sin(phi)*Math.sin(kappa),  a33=Math.cos(omega)*Math.cos(phi);
 
-                    var MatrizRotT=[[a11,a12,a13],[a21,a22,a23],[a31,a32,a33]];
+                    var MatrizRotT=[[a11,a12,a13],
+                                    [a21,a22,a23],
+                                    [a31,a32,a33]];
 
                     var CP=[[xCP],[yCP],[HCP]];
                     var CNsingiroT=[[xCP],[yCP],[HCP-hv]];

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title> Video Projection </title>
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet/0.6.3/leaflet.css">
+        <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js" integrity="sha512-A7vV8IFfih/D732iSSKi20u/ooOfj/AGehOKq0f4vLT1Zr2Y+RX7C+w8A1gaSasGtRUZpF/NZgzSAu4/Gc41Lg==" crossorigin=""></script>
+        <link rel="stylesheet" type="text/css" href="css/logReplayStyle.css">
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+    </head>
+    <body onload=init()>
+        <div id="map" style="position: absolute; top: 0; left: 0; width: 50%; height: 100%"></div>
+        <div id="videoDiv" style="position: absolute; top: 0; left: 50%; width: 50%; height: 100%; z-index: 15; overflow: hidden; background: rgba(200,200,200,1)">
+            <video id="video" onclick=getCoords() autoplay loop muted style="display:block; margin: 0; width: 100%" src="data/logVideo.mp4"></video>
+            <button onclick=pointP()>Point</button>
+            <button onclick=lineP()>Line</button>
+            <!--
+            <button onclick=pointD()>Delete Points</button>
+            <button onclick=lineD()>Delete Lines</button>
+            -->
+        </div>
+        <video id="myVideo" autoplay loop muted style="display:block; top: 0; left: 0; height: 100%; z-index: 10; opacity: 0.65" src="data/logVideo.mp4"></video>
+        <div style="z-index: 15; position:absolute; bottom: 5px; left: 5px"><br>
+            <svg width="200" height="135">
+                <rect width="200" height="135" fill="silver" stroke="black" stroke-width=".5"></rect>
+                <rect width="200" height="100" y="0" fill="darkgrey" stroke="black" stroke-width=".5"></rect>
+                <svg class="selection" width="200" height="100" x="0" y="0" viewBox="0 0 200 100">
+                    <rect width="90" height="90" x="105" y="5" fill="dimgrey">
+                        <animate id="toPause"       attributeName="x" to="5"   begin="playPause.click"   dur="0.1s" keySplines=".4 0 1 1" fill="freeze"></animate>
+                        <animate id="toForward"     attributeName="x" to="105" begin="forward.click"     dur="0.1s" keySplines=".4 0 1 1" fill="freeze"></animate>
+                    </rect>
+                </svg>
+                <svg class="playPause" id="playPause" width="100" height="100" x="0" y="0" viewBox="0 0 36 36">
+                    <defs>
+                        <path id="playPausePath" d="M11 10 L17 10 L17 26 L11 26 M20 10 L26 10 L26 26 L20 26 Z"></path>
+                    </defs>
+                    <rect width="18" height="18" x="9" y="9" fill="transparent"></rect>
+                    <use xlink:href="#playPausePath" class="buttonVisual"></use>
+                </svg>
+                <svg class="forward" id="forward" width="100" height="100" x="100" y="0" viewBox="0 0 36 36">
+                    <defs>
+                        <path id="forwardPath" d="M11 10 L11 26 L26 18 Z"></path>
+                    </defs>
+                    <rect width="18" height="18" x="9" y="9" fill="transparent"></rect>
+                    <use xlink:href="#forwardPath" class="buttonVisual"></use>
+                </svg>
+                <svg class="textHub" width="200" height="35" y="100" viewBox="0 0 200 35">
+                    <text x="100" y="17.5" text-anchor="middle" font-size="75%" font-family="Verdana" font-weight="bold" fill="black">
+                        <tspan id="fechaTextHub" alignment-baseline="central"> <!--Mar. 16 Mayo 2017-->Flight time - </tspan>
+                        <tspan id="horaTextHub" alignment-baseline="central"><!--11:00:00 UTC-->00:00:00</tspan>
+                    </text>
+                </svg>
+            </svg>
+        </div>
+        <script>
+    var map,data;
+    var myVideo=document.getElementById('myVideo'),videoDiv=document.getElementById('videoDiv'),video=document.getElementById('video');
+    var coordinates,Lat0,Lng0,p0,p1,p2,p3,corners;
+    var l=0,linePointSelector=2,pointControl=-1,timeVector=[],timeIndex=-1;
+    var initialZoom=16,frequency=100,t=[],tMatrix=[],videoCoords,newData,newDataTxt;
+    var a=0,t0,videoCurrentTimeUS,videoStartTimeUS,videoTimeNowUS,videoTimeNextUS,clock;
+    var startTimeUS=0,playTimeUS=0,pauseTimeUS=0,elapsedTimeUS=0;
+    var dataSetPoint={
+        "type": "FeatureCollection",
+        "features": []
+   };
+    var dataSetLineString={
+        "type": "FeatureCollection",
+        "features": [{
+            "type":"Feature",
+            "geometry":{
+                "type": "LineString",
+                "coordinates": []
+           }
+       }]
+   };
+    var myStyle={
+        "color": "#ffbb00",
+        "weight": 4,
+        "opacity": 0.65,
+        "fillOpacity": 0
+   };
+    var geoJsonLineString=L.geoJSON();
+    var geoJsonPoint=L.geoJSON();
+    $(".playPause").on('click',function() {
+        if (myVideo.playbackRate===1) {
+            pauseTimeUS=new Date().getTime();
+            myVideo.playbackRate=0;
+            video.playbackRate=0;
+       }
+   });
+    $(".forward").on('click',function() {
+        if (myVideo.playbackRate===0){
+            playTimeUS=new Date().getTime();
+            elapsedTimeUS += playTimeUS-pauseTimeUS;
+            myVideo.playbackRate=1;
+            video.playbackRate=1;
+       }
+   });
+    function toHHMMSS(time) {
+        var sec_num=parseInt(time,10); // don't forget the second param
+        var hours=Math.floor(sec_num/3600);
+        var minutes=Math.floor((sec_num-(hours*3600))/60);
+        var seconds=Math.floor(sec_num-(hours*3600)-(minutes*60));
+        if (hours<10) {hours="0"+hours;}
+        if (minutes<10) {minutes="0"+minutes;}
+        if (seconds<10) {seconds="0"+seconds;}
+        return hours+':'+minutes+':'+seconds;
+   }
+    function getCoords() {
+        timeIndex++;
+        timeVector.push(new Date().getTime());
+        videoCoords=[event.pageY,event.pageX-videoDiv.offsetLeft,0,1];
+        newData=transformGeoJson(p1.x,p1.y,p2.x,p2.y,p0.x,p0.y,p3.x,p3.y,videoCoords);
+        newDataTxt=map.containerPointToLatLng(new L.Point(newData[1]+p1.x,newData[0]+p1.y));
+        if (linePointSelector==1 && pointControl==1) {
+            //pointControl=false;
+            dataSetPoint.features[0]={
+                "type":"Feature",
+                "geometry":{
+                    "type": "Point",
+                    "coordinates": [newDataTxt.lng,newDataTxt.lat,0]
+               }
+           };
+       }
+        if ((timeVector[timeIndex]-timeVector[timeIndex-1])<300 && linePointSelector==0) {
+            dataSetLineString.features[0].geometry.coordinates.push(dataSetLineString.features[0].geometry.coordinates[0]);
+            linePointSelector=2;
+       }
+        if (linePointSelector==0) {
+            dataSetLineString.features[0].geometry.coordinates.push([newDataTxt.lng,newDataTxt.lat]);
+       }
+   }
+    function pointP() {
+        linePointSelector=1;
+        pointControl=-pointControl;
+   }
+    function lineP() {
+        linePointSelector=0;
+        dataSetLineString.features[0]={
+            "type":"Feature",
+            "geometry":{
+                "type": "LineString",
+                "coordinates": []
+           }
+       };
+   }
+    function pointD() {
+        dataSetPoint.features[0]={};
+        geoJsonPoint.clearLayers();
+        map.removeLayer(geoJsonPoint);
+   }
+    function lineD() {
+        geoJsonLineString.clearLayers();
+        map.removeLayer(geoJsonLineString);
+        dataSetLineString.features[0]={};
+   }
+    function init() {
+        $.get("data/logJson2.json",function (datamon) {
+            data=datamon.features;
+            t0=data[0].TimeUS/1000;
+            animate(data);
+       });
+   }
+    function animate(data){
+        var coordinates0=data[0].geometry.coordinates[0];
+        Lng0=(coordinates0[0][0]+coordinates0[1][0]+coordinates0[2][0]+coordinates0[3][0])/4;
+        Lat0=(coordinates0[0][1]+coordinates0[1][1]+coordinates0[2][1]+coordinates0[3][1])/4;
+        map=new L.Map('map');
+        //var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        var osmUrl='http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+        var osm=new L.TileLayer(osmUrl,{minZoom: 1,maxZoom: 27});
+        map.setView(new L.LatLng(Lat0,Lng0),initialZoom);
+        map.addLayer(osm);
+        setInterval(timeFlow,frequency);
+   }
+    function timeFlow() {
+        if (myVideo.playbackRate===1) getLpos();
+        //console.log(l);
+        coordinates=data[l].geometry.coordinates[0];
+        p0=map.latLngToContainerPoint(new L.LatLng(coordinates[0][1],coordinates[0][0]));
+        p1=map.latLngToContainerPoint(new L.LatLng(coordinates[1][1],coordinates[1][0]));
+        p2=map.latLngToContainerPoint(new L.LatLng(coordinates[2][1],coordinates[2][0]));
+        p3=map.latLngToContainerPoint(new L.LatLng(coordinates[3][1],coordinates[3][0]));
+        corners=[p1.x,p1.y,p2.x,p2.y,p0.x,p0.y,p3.x,p3.y];
+        transform2D(myVideo,corners[0],corners[1],corners[2],corners[3],corners[4],corners[5],corners[6],corners[7]);
+        geoJsonLineString=L.geoJSON(dataSetLineString,{
+            style: myStyle
+       }).addTo(map);
+        geoJsonPoint=L.geoJSON(dataSetPoint,{
+            style: myStyle
+       }).addTo(map);
+   }
+    function getLpos() {
+        //if (l>=data.length-1) {l=0;a=0;}
+        if (l>=data.length-1) {return}
+        if (a<1){
+            startTimeUS=new Date().getTime();
+            videoStartTimeUS=startTimeUS;
+            elapsedTimeUS=0;
+            a++;
+       }
+        videoCurrentTimeUS=new Date().getTime();
+        clock=videoCurrentTimeUS-videoStartTimeUS-elapsedTimeUS;
+        videoTimeNowUS=data[l].TimeUS/1000-t0;
+        videoTimeNextUS=data[l+1].TimeUS/1000-t0;
+        if (videoTimeNowUS-clock<1000) {
+            if (videoTimeNextUS-clock<1000) {
+                while (videoTimeNextUS-clock<1000) {
+                    l++;
+                    videoTimeNextUS=data[l].TimeUS/1000-t0;
+               }
+           }
+       } else {
+            while (videoTimeNowUS-clock>1000) {
+                l--;
+                videoTimeNowUS=data[l].TimeUS/1000-t0;
+           }
+       }
+        //l++
+        document.getElementById("horaTextHub").innerHTML=toHHMMSS(video.currentTime);
+        //document.getElementById("horaTextHub").innerHTML=toHHMMSS((data[l].TimeUS-data[0].TimeUS)/1000000);
+        return l;
+   }
+    function transform2D(elt,x1,y1,x2,y2,x3,y3,x4,y4) {
+        var w=elt.videoWidth,h=elt.videoHeight;
+        t=general2DProjection(0,0,x1,y1,w,0,x2,y2,0,h,x3,y3,w,h,x4,y4);
+        for (var i=0;i<9;++i) t[i]=t[i]/t[8];
+        t=[t[0],t[3],0,t[6],
+             t[1],t[4],0,t[7],
+             0   ,0   ,1,0   ,
+             t[2],t[5],0,t[8]];
+        var tTransform="matrix3d("+t.join(",")+")";
+        elt.style["-webkit-transform"]=tTransform;
+        elt.style["-moz-transform"]=tTransform;
+        elt.style["-o-transform"]=tTransform;
+        elt.style.transform=tTransform;
+        elt.style["-webkit-transform-origin"]="left top";
+        elt.style["-moz-transform-origin"]="left top";
+        elt.style["-o-transform-origin"]="left top";
+        elt.style.transformOrigin="left top";
+   }
+    function transformGeoJson(x1,y1,x2,y2,x3,y3,x4,y4,videoCoords) {
+        var w=video.offsetWidth,h=video.offsetHeight;
+        var tV=general2DProjection(0,0,x1,y1,w,0,x2,y2,0,h,x3,y3,w,h,x4,y4);
+        for (var i=0;i<9;++i) tV[i]=tV[i]/tV[8];
+        tMatrix=[tV[0],tV[3],0,tV[6],
+                   tV[1],tV[4],0,tV[7],
+                   0    ,0    ,1,0    ,
+                   tV[2],tV[5],0,tV[8]];
+        var tP=[
+            tMatrix[0]*videoCoords[0]+tMatrix[1]*videoCoords[1]+tMatrix[2]*videoCoords[2]+tMatrix[3]*videoCoords[3],
+            tMatrix[4]*videoCoords[0]+tMatrix[5]*videoCoords[1]+tMatrix[6]*videoCoords[2]+tMatrix[7]*videoCoords[3],
+            tMatrix[8]*videoCoords[0]+tMatrix[9]*videoCoords[1]+tMatrix[10]*videoCoords[2]+tMatrix[11]*videoCoords[3],
+            tMatrix[12]*videoCoords[0]+tMatrix[13]*videoCoords[1]+tMatrix[14]*videoCoords[2]+tMatrix[15]*videoCoords[3]
+       ];
+        for (var j=0;i<4;++j) tP[j]=tV[j]/tV[3];
+        return  tP
+   }
+    function general2DProjection(x1s,y1s,x1d,y1d,x2s,y2s,x2d,y2d,x3s,y3s,x3d,y3d,x4s,y4s,x4d,y4d) {
+        var s=basisToPoints(x1s,y1s,x2s,y2s,x3s,y3s,x4s,y4s);
+        var d=basisToPoints(x1d,y1d,x2d,y2d,x3d,y3d,x4d,y4d);
+        return multmm(d,adj(s));
+   }
+    function basisToPoints(x1,y1,x2,y2,x3,y3,x4,y4) {
+        var m=[
+            x1,x2,x3,
+            y1,y2,y3,
+            1, 1, 1
+       ];
+        var v=multmv(adj(m),[x4,y4,1]);
+        return multmm(m,[
+            v[0],0,0,
+            0,v[1],0,
+            0,0,v[2]
+       ]);
+   }
+    function adj(m) {// Compute the adjugate of m
+        return [
+            m[4]*m[8]-m[5]*m[7],m[2]*m[7]-m[1]*m[8],m[1]*m[5]-m[2]*m[4],
+            m[5]*m[6]-m[3]*m[8],m[0]*m[8]-m[2]*m[6],m[2]*m[3]-m[0]*m[5],
+            m[3]*m[7]-m[4]*m[6],m[1]*m[6]-m[0]*m[7],m[0]*m[4]-m[1]*m[3]
+       ];
+   }
+    function multmm(a,b) {// multiply two matrices
+        var c=new Array(9);
+        for (var i=0;i<3;++i) {
+            for (var j=0;j<3;++j) {
+                var cij=0;
+                for (var k=0;k<3;++k) {
+                    cij += a[3*i+k]*b[3*k+j];
+               }
+                c[3*i+j]=cij;
+           }
+       }
+        return c;
+   }
+    function multmv(m,v) {// multiply matrix and vector
+        return [
+            m[0]*v[0]+m[1]*v[1]+m[2]*v[2],
+            m[3]*v[0]+m[4]*v[1]+m[5]*v[2],
+            m[6]*v[0]+m[7]*v[1]+m[8]*v[2]
+       ];
+   }
+</script>
+    </body>
+</html>

@@ -28,20 +28,6 @@
 
 </div>
 
-<svg width="400px" height="150px" viewBox="0 0 80 30"
-     xmlns="http://www.w3.org/2000/svg">
-
-    <defs>
-        <linearGradient id="Gradient01">
-            <stop offset="20%" stop-color="#39F" />
-            <stop offset="90%" stop-color="#F3F" />
-        </linearGradient>
-    </defs>
-
-    <rect x="10" y="10" width="60" height="10"
-          fill="url(#Gradient01)" />
-</svg>
-
 <div style="position:absolute; bottom: 5px; right: 5px">
     <font color="grey"><b><em>¡En pruebas!</em></b></font></br>
 
@@ -50,99 +36,76 @@
         <rect width="300" height="160" fill="silver" stroke="black" stroke-width=".5"/>
         <rect width="300" height="25" fill="grey" stroke="black" stroke-width=".5"/>
 
-        <!-- Selector Velocidad -->
-        <svg class="speed"
-             width="300" height="25" x="0" y="0"
-             viewBox="0 0 120 10">
+        <!-- Selector Velocidad (not yet) -->
+        <svg class="speed" width="300" height="25" x="0" y="0" viewBox="0 0 120 10">
             <defs>
                 <line id="mainLine" y1="2" y2="10" stroke-width="0.5" stroke="black"/>
                 <line id="subLine" y1="4" y2="10" stroke-width="0.5" stroke="black" stroke-opacity="0.5"/>
-                <path id="speedDial" fill="red" fill-opacity="0.7"
-                      d="M0.5 4.5 L0 5 L6 5 L5.5 4.5 L4 4 L4 1 L3 -2 L2 1 L2 4 Z" transform="translate(-3 -5)"/>
+                <path id="speedDial" fill="red" fill-opacity="0.7" d="M0.5 4.5 L0 5 L6 5 L5.5 4.5 L4 4 L4 1 L3 -2 L2 1 L2 4 Z" transform="translate(-3 -5)"/>
             </defs>
             <use x="10" y="2" xlink:href="#subLine"/>
             <use x="20" xlink:href="#subLine"/>
-            <use x="100" xlink:href="#subLine"/>
-            <use x="110" y="2" xlink:href="#subLine"/>
-
             <use x="35" xlink:href="#mainLine"/>
             <use x="47.5" y="-1" xlink:href="#subLine"/>
             <use x="60" y="-2" xlink:href="#mainLine"/>
             <use x="72.5" y="-1" xlink:href="#subLine"/>
             <use x="85" xlink:href="#mainLine"/>
-
+            <use x="100" xlink:href="#subLine"/>
+            <use x="110" y="2" xlink:href="#subLine"/>
             <use x="60" y="10" xlink:href="#speedDial"/>
         </svg>
 
         <rect width="300" height="100" y="25" fill="darkgrey" stroke="black" stroke-width=".5"/>
 
         <!-- Selector reproducción (cuadrado que señala el botón) -->
-        <svg class="selection"
-             width="300" height="100" x="0" y="25"
-             viewBox="0 0 300 100">
+        <svg class="selection" width="300" height="100" x="0" y="25" viewBox="0 0 300 100">
             <rect width="90" height="90" x="105" y="5" fill="dimgrey">
-                <animate id="toBack"
-                         attributeName="x" to="5"
-                         begin="backward.click" dur="0.1s" keySplines=".4 0 1 1" fill="freeze"/></animate>
-                <animate id="toPause"
-                         attributeName="x"
-                         to="105"
-                         begin="playPause.click" dur="0.1s" keySplines=".4 0 1 1" fill="freeze"></animate>
-                <animate id="toForward"
-                         attributeName="x"
-                         to="205"
-                         begin="forward.click" dur="0.1s" keySplines=".4 0 1 1" fill="freeze"></animate>
+                <animate id="toBack"    attributeName="x" to="5"   begin="backward.click"  dur="0.1s" keySplines=".4 0 1 1" fill="freeze"></animate>
+                <animate id="toPause"   attributeName="x" to="105" begin="playPause.click" dur="0.1s" keySplines=".4 0 1 1" fill="freeze"></animate>
+                <animate id="toForward" attributeName="x" to="205" begin="forward.click"   dur="0.1s" keySplines=".4 0 1 1" fill="freeze"></animate>
             </rect>
         </svg>
 
         <!-- BOTONES -->
-        <svg class="backward" id="backward"
-             width="100" height="100" x="0" y="25" viewBox="0 0 36 36">
+        <svg class="backward" id="backward" width="100" height="100" x="0" y="25" viewBox="0 0 36 36">
             <defs>
-                <path id="backwardPath"
-                      d="M 11 18 L 26 26 L 26 10"/>
+                <path id="backwardPath" d="M 11 18 L 26 26 L 26 10"/>
             </defs>
             <rect width="18" height="18" x="9" y="9" fill="transparent"/>
             <use xlink:href="#backwardPath" class="buttonVisual"/>
         </svg>
-        <svg class="playPause" id="playPause"
-             width="100" height="100" x="100" y="25" viewBox="0 0 36 36">
+        <svg class="playPause" id="playPause" width="100" height="100" x="100" y="25" viewBox="0 0 36 36">
             <defs>
-                <path id="playPausePath"
-                      d="M11 10 L17 10 L17 26 L11 26 M20 10 L26 10 L26 26 L20 26 Z"/>
+                <path id="playPausePath" d="M11 10 L17 10 L17 26 L11 26 M20 10 L26 10 L26 26 L20 26 Z"/>
             </defs>
             <rect width="18" height="18" x="9" y="9" fill="transparent"/>
             <use xlink:href="#playPausePath" class="buttonVisual"/>
         </svg>
-        <svg class="forward" id="forward"
-             width="100" height="100" x="200" y="25" viewBox="0 0 36 36">
+        <svg class="forward" id="forward" width="100" height="100" x="200" y="25" viewBox="0 0 36 36">
             <defs>
-                <path id="forwardPath"
-                      d="M11 10 L11 26 L26 18 Z"/>
+                <path id="forwardPath" d="M11 10 L11 26 L26 18 Z"/>
             </defs>
             <rect width="18" height="18" x="9" y="9" fill="transparent"/>
             <use xlink:href="#forwardPath" class="buttonVisual"/>
         </svg>
 
         <!-- TEXTBOX -->
-        <svg class="textHub"
-             width="300" height="35" y="125" viewBox="0 0 300 35">
-            <text x="150" y="17.5" text-anchor="middle"
-                  font-size="75%" font-family="Verdana" font-weight="bold" fill="black">
-                <tspan id="fechaTextHub" alignment-baseline="central">Mar. 16 Mayo 2017 - </tspan><tspan id="horaTextHub" alignment-baseline="central">11:00:00 UTC</tspan>
+        <svg class="textHub" width="300" height="35" y="125" viewBox="0 0 300 35">
+            <text x="150" y="17.5" text-anchor="middle" font-size="75%" font-family="Verdana" font-weight="bold" fill="black">
+                <tspan id="fechaTextHub" alignment-baseline="central"> Mar. 16 Mayo 2017 - </tspan>
+                <tspan id="horaTextHub" alignment-baseline="central">11:00:00 UTC</tspan>
             </text>
         </svg>
     </svg>
 
 </div>
-
 <!-- Script de reacción a la presión de botones -->
 <script id="buttonScript">
 	var playStatus  = 0, // -1 backwards, 0 pause, 1 forward
 	    playSpeed   = 1, // from 0 to +X (el que queramos, mejor limitar en función del intervalo a representar)
-		  currInstant = 100, // (s) (Se actualizará según la reproducción y en base al tiempo discretizado del log)
-		  initInstant = 100, // Time UTC (Se usará para tener en cuenta el valor de tiempo inicial del log)
-		  finInstant  = 500; // Time UTC (Se usará para tener en cuenta el valor de tiempo final del log)
+        currInstant = 100, // (s) (Se actualizará según la reproducción y en base al tiempo discretizado del log)
+        initInstant = 100, // Time UTC (Se usará para tener en cuenta el valor de tiempo inicial del log)
+        finInstant  = 500; // Time UTC (Se usará para tener en cuenta el valor de tiempo final del log)
 
 	$(".backward").on('click', function() {
 		playStatus = -1;
@@ -150,14 +113,12 @@
 		playSettingsUpdate();
 	});
 
-
 	$(".playPause").on('click', function() {
 		prevPlayStat = playStatus;
-		if (playStatus==0) {playStatus=prevPlayStat} else {playStatus=0}
+        if (playStatus==0) {playStatus=prevPlayStat} else {playStatus=0}
 		console.log("Has pulsado playPause!");
 		playSettingsUpdate();
 	});
-
 
 	$(".forward").on('click', function() {
 		playStatus = 1;
@@ -175,7 +136,7 @@
 
 	document.getElementById("playSettings").onload = function() { playSettingsUpdate() };
 	// Not working now for some reason.
-  playSettingsUpdate();
+    playSettingsUpdate();
 </script>
 
 </body>

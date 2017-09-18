@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title> Video Projection </title>
+        <script src="http://d3js.org/d3.v3.min.js"></script>
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet/0.6.3/leaflet.css">
+        <script src="//cdnjs.cloudflare.com/ajax/libs/leaflet/0.6.3/leaflet.js"></script>
+        <link rel="stylesheet" type="text/css" href="css/logReplayStyle.css">
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+    </head>
+    <body onload = init()>
+        <div id = "map" style = "position: absolute; top: 0; bottom: 0; left: 0; right: 0"></div>
+        <video id = "myVideo" autoplay loop muted style = "display:block; margin: 0" src = "data/logVideo.mp4"></video>
+        <div style="position:absolute; bottom: 5px; left: 5px">
+    <!--<font color="grey"><b><em>¡En pruebas!</em></b></font>-->
+    <br>
+    <!-- Se ha decidido cambiar de 300 a 200 el ancho de todos los elementos y se ha reducido la coordenada y a 0-->
+    <svg width="200" height="135">
+    <!-- Marcos y forma inicial -->
+        <rect width="200" height="135" fill="silver" stroke="black" stroke-width=".5"></rect>
+        <!--<rect width="200" height="25" fill="grey" stroke="black" stroke-width=".5"></rect>-->
+    <!-- Selector Velocidad (not yet) -->
+        <!--<svg class="speed" width="300" height="25" x="0" y="0" viewBox="0 0 120 10">
+            <defs>
+                <line id="mainLine" y1="2" y2="10" stroke-width="0.5" stroke="black"></line>
+                <line id="subLine" y1="4" y2="10" stroke-width="0.5" stroke="black" stroke-opacity="0.5"></line>
+                <path id="speedDial" fill="red" fill-opacity="0.7" d="M0.5 4.5 L0 5 L6 5 L5.5 4.5 L4 4 L4 1 L3 -2 L2 1 L2 4 Z" transform="translate(-3 -5)"></path>
+            </defs>
+            <use x="10" y="2" xlink:href="#subLine"></use>
+            <use x="20" xlink:href="#subLine"></use>
+            <use x="35" xlink:href="#mainLine"></use>
+            <use x="47.5" y="-1" xlink:href="#subLine"></use>
+            <use x="60" y="-2" xlink:href="#mainLine"></use>
+            <use x="72.5" y="-1" xlink:href="#subLine"></use>
+            <use x="85" xlink:href="#mainLine"></use>
+            <use x="100" xlink:href="#subLine"></use>
+            <use x="110" y="2" xlink:href="#subLine"></use>
+            <use x="60" y="10" xlink:href="#speedDial"></use>
+        </svg>-->
+        <rect width="200" height="100" y="0" fill="darkgrey" stroke="black" stroke-width=".5"></rect>
+    <!-- Selector reproducción (cuadrado que señala el botón) -->
+        <svg class="selection" width="200" height="100" x="0" y="0" viewBox="0 0 200 100">
+            <rect width="90" height="90" x="105" y="5" fill="dimgrey">
+                <animate id="toPause"       attributeName="x" to="5"   begin="playPause.click"   dur="0.1s" keySplines=".4 0 1 1" fill="freeze"></animate>
+                <animate id="toForward"     attributeName="x" to="105" begin="forward.click"     dur="0.1s" keySplines=".4 0 1 1" fill="freeze"></animate>
+                <!--<animate id="toFastForward" attributeName="x" to="205" begin="fastforward.click" dur="0.1s" keySplines=".4 0 1 1" fill="freeze"></animate>-->
+            </rect>
+        </svg>
+    <!-- BOTONES -->
+        <svg class="playPause" id="playPause" width="100" height="100" x="0" y="0" viewBox="0 0 36 36">
+            <defs>
+                <path id="playPausePath" d="M11 10 L17 10 L17 26 L11 26 M20 10 L26 10 L26 26 L20 26 Z"></path>
+            </defs>
+            <rect width="18" height="18" x="9" y="9" fill="transparent"></rect>
+            <use xlink:href="#playPausePath" class="buttonVisual"></use>
+        </svg>
+        <svg class="forward" id="forward" width="100" height="100" x="100" y="0" viewBox="0 0 36 36">
+            <defs>
+                <path id="forwardPath" d="M11 10 L11 26 L26 18 Z"></path>
+            </defs>
+            <rect width="18" height="18" x="9" y="9" fill="transparent"></rect>
+            <use xlink:href="#forwardPath" class="buttonVisual"></use>
+        </svg>
+        <!--<svg class="fastforward" id="fastforward" width="100" height="100" x="200" y="25" viewBox="0 0 36 36">
+            <defs>
+                <path id="fastforwardPath" d="M6 10 L6 26 L21 18 M16 10 L16 26 L31 18 Z"></path>
+            </defs>
+            <rect width="18" height="18" x="9" y="9" fill="transparent"></rect>
+            <use xlink:href="#fastforwardPath" class="buttonVisual"></use>
+        </svg>-->
+    <!-- TEXTBOX -->
+        <svg class="textHub" width="200" height="35" y="100" viewBox="0 0 200 35">
+            <text x="100" y="17.5" text-anchor="middle" font-size="75%" font-family="Verdana" font-weight="bold" fill="black">
+                <tspan id="fechaTextHub" alignment-baseline="central"> <!--Mar. 16 Mayo 2017-->Flight time - </tspan>
+                <tspan id="horaTextHub" alignment-baseline="central"><!--11:00:00 UTC-->00:00:00</tspan>
+            </text>
+        </svg>
+    </svg>
+</div>
+        <script>
+    var map, data;
+    var video = document.getElementById( 'myVideo' );
+    var coordinates, Lat0, Lng0, p0, p1, p2, p3, corners;
+    var l = 0, initialZoom = 16, m = 3-3, n = -40+40, frequency = 10, radius = 3;
+    var a = 0, t0, startTime, currentTime, renderStartTime, renderCurrentTime, renderTimeNow, renderTimeNext, clock;
+    var playTime = 0, pauseTime = 0, fastTime = 0, elapsedTime = 0;
+    var svg = d3.select(document.getElementById("map")).append("svg").attr( { width: 480, height: 204, x: 0, y: 0 } );
+    var dataset = [];
+    var circleAttrs = {
+        cx: function(d) { return d.x; },
+        cy: function(d) { return d.y; },
+        r: radius
+    };
+    svg.selectAll("circle")
+        .data(dataset)
+        .enter()
+        .append("circle")
+        .attr(circleAttrs)  // Get attributes from circleAttrs var
+        .on("mouseover", handleMouseOver)
+        .on("mouseout", handleMouseOut);
+    // On Click, we want to add data to the array and chart
+    svg.on("click", function() {
+        var coords = d3.mouse(this);
+        // Normally we go from data to pixels, but here we're doing pixels to data
+        var newData= {
+            x: coords[0],  // Takes the pixel number to convert to number
+            y: coords[1]
+        };
+        dataset.push(newData);   // Push data to our array
+        svg.selectAll("circle")  // For new circle, go through the update process
+            .data(dataset)
+            .enter()
+            .append("circle")
+            .attr(circleAttrs)  // Get attributes from circleAttrs var
+            .on("mouseover", handleMouseOver)
+            .on("mouseout", handleMouseOut);
+    });
+    // Create Event Handlers for mouse
+    function handleMouseOver(d, i) {  // Add interactivity
+        // Use D3 to select element, change color and size
+        d3.select(this).attr({
+            fill: "orange",
+            r: radius
+        });
+        // Specify where to put label of text
+        svg.append("text").attr({
+            id: "t" + d.x + "-" + d.y + "-" + i,  // Create an id for text so we can select it later for removing on mouseout
+            x: function() { return d.x - 30; },
+            y: function() { return d.y - 15; }
+        })
+            .text(function() {
+                return [d.x, d.y];  // Value of the text
+            });
+    }
+    function handleMouseOut(d, i) {
+        // Use D3 to select element, change color back to normal
+        d3.select(this).attr({
+            fill: "black",
+            r: radius
+        });
+        // Select text by id and then remove
+        d3.select("#t" + d.x + "-" + d.y + "-" + i).remove();  // Remove text location
+    }
+    $(".playPause").on('click', function() {
+        if (video.playbackRate === 1) {
+            pauseTime = new Date().getTime();
+            video.playbackRate = 0;
+        }/*
+        if (video.playbackRate === 2) {
+            pauseTime = new Date().getTime();
+            video.playbackRate = 0;
+        }*/
+    });
+    $(".forward").on('click', function() {
+        if (video.playbackRate === 0 ){
+            playTime = new Date().getTime();
+            elapsedTime += playTime - pauseTime;
+            video.playbackRate = 1;
+        }/*
+        if (video.playbackRate === 2 ){
+            playTime = new Date().getTime();
+            elapsedTime += playTime - fastTime;
+            video.playbackRate = 2;
+        }*/
+    });
+    /*
+    $(".fastforward").on('click', function() {
+        if (video.playbackRate === 0 ){
+            fastTime = new Date().getTime();
+            elapsedTime += fastTime - pauseTime;
+            video.playbackRate = 2;
+        }
+        if (video.playbackRate === 1 ){
+            fastTime = new Date().getTime();
+            elapsedTime += fastTime - playTime;
+            video.playbackRate = 2;
+        }
+    });
+    */
+    function toHHMMSS(time) {
+        var sec_num = parseInt(time, 10); // don't forget the second param
+        var hours = Math.floor(sec_num / 3600);
+        var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+        var seconds = Math.floor(sec_num - (hours * 3600) - (minutes * 60));
+        if (hours < 10) { hours = "0" + hours; }
+        if (minutes < 10) { minutes = "0" + minutes; }
+        if (seconds < 10) { seconds = "0" + seconds; }
+        return hours + ':' + minutes + ':' + seconds;
+    }
+    function init() {
+        $.get( "data/logJson.json", function ( datamon ) {
+            data = datamon.features;
+            t0 = data[0].TimeUS/1000;
+            animate( data );
+        });
+    }
+    function animate( data ){
+        var coordinates0 = data[0].geometry.coordinates[0];
+        Lng0 = ( coordinates0[0][0] + coordinates0[1][0] + coordinates0[2][0] + coordinates0[3][0] ) / 4 + m;
+        Lat0 = ( coordinates0[0][1] + coordinates0[1][1] + coordinates0[2][1] + coordinates0[3][1] ) / 4 + n;
+        map = new L.Map( 'map' );
+        //var osmUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        var osmUrl = 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+        var osm = new L.TileLayer( osmUrl, { minZoom: 1, maxZoom: 27 } );
+        map.setView( new L.LatLng( Lat0, Lng0 ), initialZoom );
+        map.addLayer( osm );
+        //video.currentTime = 180;
+        video.playbackRate = 1;
+        setInterval( timeFlow, frequency );
+    }
+    function timeFlow() {
+        if ( video.playbackRate === 1 ) getLpos();
+        //if ( video.playbackRate === 2 ) getLneg();
+        console.log(l);
+        coordinates = data[l].geometry.coordinates[0];
+        p0 = map.latLngToContainerPoint( new L.LatLng( coordinates[0][1] + n, coordinates[0][0] + m ) );
+        p1 = map.latLngToContainerPoint( new L.LatLng( coordinates[1][1] + n, coordinates[1][0] + m ) );
+        p2 = map.latLngToContainerPoint( new L.LatLng( coordinates[2][1] + n, coordinates[2][0] + m ) );
+        p3 = map.latLngToContainerPoint( new L.LatLng( coordinates[3][1] + n, coordinates[3][0] + m ) );
+        corners = [ p1.x, p1.y, p2.x, p2.y, p0.x, p0.y, p3.x, p3.y ];
+        transform2d( video, corners[0], corners[1], corners[2], corners[3], corners[4], corners[5], corners[6], corners[7] );
+    }
+    function getLpos() {
+        if( l >= data.length - 1 ) { l = 0; a = 0; }
+        if ( a < 1 ){
+            startTime = new Date().getTime();
+            renderStartTime = startTime;
+            elapsedTime = 0;
+            video.currentTime = 180;
+            a++;
+        }
+        currentTime = new Date().getTime();
+        renderCurrentTime = currentTime - elapsedTime;
+        clock = renderCurrentTime - renderStartTime;
+        renderTimeNow = data[l].TimeUS/1000 - t0;
+        renderTimeNext = data[l+1].TimeUS/1000 - t0;
+        if ( renderTimeNow - clock < 0 ) {
+            if ( renderTimeNext - clock < 0 ) {
+                while ( renderTimeNext - clock < 0) {
+                    l++;
+                    renderTimeNext = data[l].TimeUS/1000 - t0;
+                }
+            }
+        } else {
+            while (renderTimeNow - clock > 0) {
+                l--;
+                renderTimeNow = data[l].TimeUS / 1000 - t0;
+            }
+        }
+        document.getElementById("horaTextHub").innerHTML = toHHMMSS(data[l].TimeUS/1000000);
+        return l;
+    }
+    function getLneg() {
+        if( l >= data.length - 1 ) { l = 0; a = 0; }
+        if ( a < 1 ){
+            startTime = new Date().getTime();
+            renderStartTime = startTime;
+            elapsedTime = 0;
+            a++;
+        }
+        currentTime = new Date().getTime();
+        renderCurrentTime = currentTime - elapsedTime;
+        clock = renderCurrentTime - renderStartTime;
+        renderTimeNow = (data[l].TimeUS / 1000 - t0)/2;
+        renderTimeNext = (data[l+1].TimeUS / 1000 - t0)/2;
+        if ( renderTimeNow - clock < 0 ) {
+            if ( renderTimeNext - clock < 0 ) {
+                while ( renderTimeNext - clock < 0) {
+                    l++;
+                    renderTimeNext = (data[l].TimeUS / 1000 - t0)/2;
+                }
+            }
+        } else {
+            while (renderTimeNow - clock > 0) {
+                l--;
+                renderTimeNow = (data[l].TimeUS / 1000 - t0)/2;
+            }
+        }
+        document.getElementById("horaTextHub").innerHTML = toHHMMSS(data[l].TimeUS/1000000);
+        return l;
+    }
+    function transform2d( elt, x1, y1, x2, y2, x3, y3, x4, y4 ) {
+        var w = elt.offsetWidth, h = elt.offsetHeight;
+        var t = general2DProjection( 0, 0, x1, y1, w, 0, x2, y2, 0, h, x3, y3, w, h, x4, y4 );
+        for ( var i = 0; i < 9; ++i ) t[i] = t[i]/t[8];
+        t = [t[0], t[3], 0, t[6],
+             t[1], t[4], 0, t[7],
+             0   , 0   , 1, 0   ,
+             t[2], t[5], 0, t[8]];
+        elt.style["-webkit-transform-origin"] = "left top";
+        elt.style["-moz-transform-origin"] = "left top";
+        elt.style["-o-transform-origin"] = "left top";
+        elt.style.transformOrigin = "left top";
+        t = "matrix3d(" + t.join(", ") + ")";
+        elt.style["-webkit-transform"] = t;
+        elt.style["-moz-transform"] = t;
+        elt.style["-o-transform"] = t;
+        elt.style.transform = t;
+    }
+    function general2DProjection( x1s, y1s, x1d, y1d, x2s, y2s, x2d, y2d, x3s, y3s, x3d, y3d, x4s, y4s, x4d, y4d ) {
+        var s = basisToPoints( x1s, y1s, x2s, y2s, x3s, y3s, x4s, y4s );
+        var d = basisToPoints( x1d, y1d, x2d, y2d, x3d, y3d, x4d, y4d );
+        return multmm( d, adj(s) );
+    }
+    function basisToPoints( x1, y1, x2, y2, x3, y3, x4, y4 ) {
+        var m = [
+            x1, x2, x3,
+            y1, y2, y3,
+            1,  1,  1
+        ];
+        var v = multmv( adj(m), [ x4, y4, 1 ] );
+        return multmm( m, [
+            v[0], 0, 0,
+            0, v[1], 0,
+            0, 0, v[2]
+        ] );
+    }
+    function adj(m) { // Compute the adjugate of m
+        return [
+            m[4]*m[8] - m[5]*m[7], m[2]*m[7] - m[1]*m[8], m[1]*m[5] - m[2]*m[4],
+            m[5]*m[6] - m[3]*m[8], m[0]*m[8] - m[2]*m[6], m[2]*m[3] - m[0]*m[5],
+            m[3]*m[7] - m[4]*m[6], m[1]*m[6] - m[0]*m[7], m[0]*m[4] - m[1]*m[3]
+        ];
+    }
+    function multmm( a, b ) { // multiply two matrices
+        var c = new Array(9);
+        for ( var i = 0; i < 3; ++i ) {
+            for ( var j = 0; j < 3; ++j ) {
+                var cij = 0;
+                for ( var k = 0; k < 3; ++k ) {
+                    cij += a[3*i + k] * b[3*k + j];
+                }
+                c[3*i + j] = cij;
+            }
+        }
+        return c;
+    }
+    function multmv( m, v ) { // multiply matrix and vector
+        return [
+            m[0]*v[0] + m[1]*v[1] + m[2]*v[2],
+            m[3]*v[0] + m[4]*v[1] + m[5]*v[2],
+            m[6]*v[0] + m[7]*v[1] + m[8]*v[2]
+        ];
+    }
+</script>
+    </body>
+</html>
