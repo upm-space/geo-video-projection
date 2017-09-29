@@ -4,27 +4,38 @@
 
 var fs=require("fs");
 var proj4=require("proj4");
-var filename1="../data/coordenadasProyeccion2.json";
-var filename2="../data/logJson2.js";
-var filename3="../data/logJson2.json";
-var json=require("../data/47 11-07-2017 14-16-04.json");
+var filename1="../data/coordenadasProyeccion.json";
+var filename2="../data/logJson.js";
+var filename3="../data/2017-09-21 19-33-33 corners.json";
+var filename4="../data/2017-09-21 19-33-33 photoCenterLine.json";
+var json=require("../data/2017-09-21 19-33-33.json");
 
-if(fs.existsSync(filename1)){ fs.unlinkSync(filename1) }
-if(fs.existsSync(filename2)){ fs.unlinkSync(filename2) }
+//if(fs.existsSync(filename1)){ fs.unlinkSync(filename1) }
+//if(fs.existsSync(filename2)){ fs.unlinkSync(filename2) }
 if(fs.existsSync(filename3)){ fs.unlinkSync(filename3) }
+if(fs.existsSync(filename4)){ fs.unlinkSync(filename4) }
 
-var text1 = '{\n\t"Coordenadas" : [\n';
-var text2 = 'var data = {\n\t"type": "FeatureCollection",\n\t"features": [\n';
+//var text1 = '{\n\t"Coordenadas" : [\n';
+//var text2 = 'var data = {\n\t"type": "FeatureCollection",\n\t"features": [\n';
 var text3 = '{\n\t"type": "FeatureCollection",\n\t"features": [\n';
+var text4 = '{\n\t"type": "FeatureCollection",\n\t"features": [\n\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "LineString",\n\t\t\t\t"coordinates": [';
 
 function obtainFootprints(xCP,yCP,altitude,hv,focal,AnchSens,LargSens,omega,phi,bearing){ return feedProjection(xCP,yCP,altitude,hv,focal,AnchSens,LargSens,omega,phi,bearing) }
 
 var xCP=0, yCP=0, HCP=0, hv=0, omega=0, phi=0, kappa=0, time=0;
 var AnchSens=15.6, LargSens=23.5, f=16, cameraRollOffset=35;
 var x1=0, y1=0, x2=0, y2=0, x3=0, y3=0, x4=0, y4=0;
-var length=json.ATT.length;
+var length=json.ATT.length, takeOffTime=0, logTime=0, a=0;
 
-for (var j=2995-40;j<length;j++){
+for (var k=0;k<json.MSG.length;k++){
+    if (json.MSG[k].Message === 'Armed AUTO'){
+        takeOffTime=json.MSG[k].TimeUS;
+    }
+}
+
+for (var j=0;j<length;j++){
+    logTime=json.ATT[j].TimeUS;
+    if(logTime<takeOffTime){continue} else {if(a<1){a=j}}
     xCP=json.POS[j].Lng;
     yCP=json.POS[j].Lat;
     HCP=json.POS[j].Alt;
@@ -38,7 +49,7 @@ for (var j=2995-40;j<length;j++){
     }
     //omega=-json.ATT[j].Pitch;
     kappa=json.ATT[j].Yaw;
-    time=json.ATT[j].TimeUS-json.ATT[0].TimeUS;
+    time=json.ATT[j].TimeUS-json.ATT[a].TimeUS;
 
     var result=obtainFootprints(xCP,yCP,HCP,hv,f,AnchSens,LargSens,omega,phi,kappa);
 
@@ -66,11 +77,19 @@ for (var j=2995-40;j<length;j++){
     }else{
         text3 += '\t\t{\n\t\t\t"type":"Feature",\n\t\t\t"geometry":{\n\t\t\t\t"type": "Polygon",\n\t\t\t\t"coordinates": [[['+x1+', '+y1+'], ['+x2+', '+y2+'], ['+x3+', '+y3+'], ['+x4+', '+y4+'], ['+x1+', '+y1+']]]\n\t\t\t},\n\t\t\t"TimeUS": '+time+'\n\t\t},\n';
     }
+
+    if(j==length-1){
+        text4 += '['+xCP+', '+yCP+']]\n\t\t\t}\n\t\t}\n\t]\n}';
+    }else{
+        text4 += '['+xCP+', '+yCP+'], ';
+    }
 }
 
 //fs.appendFileSync(filename1, text1);
 //fs.appendFileSync(filename2, text2);
 fs.appendFileSync(filename3, text3);
+fs.appendFileSync(filename4, text4);
+
 
 /*
  * @param xCP CoordenadaX del centroide
@@ -542,7 +561,6 @@ function arraySum(sumSub,a,b){
 
     return result;
 }
-
 
 function multiplyMatrix(a, b) {
     var aNumRows = a.length, aNumCols = a[0].length,

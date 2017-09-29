@@ -4,7 +4,7 @@
 
 
 
-var myLogPath = "../data/47 11-07-2017 14-16-04.bin.log";
+var myLogPath = "../data/2017-09-21 19-33-33.log";
 var lineReader = require("line-reader");
 var fs = require("fs");
 
@@ -90,7 +90,7 @@ function log2Var(locLog,callback) {
 
         var lineArr = line.split(", ");
 
-        if (lineArr[0] == "GPS") {
+        if (lineArr[0] !== "FMT") {
             parseMSG(myLogVar, lineArr);
         }
         if (last) {
@@ -172,7 +172,7 @@ log2Var(myLogPath, function(tryVAr){
     // TODO use this var in another script
     //console.log(tryVAr);
     // Make a JSON object properly spaced
-    var DataJSON = "../data/2017-07-11_14-16-04-GPS.json";
+    var DataJSON = "../data/2017-09-21 19-33-33.json";
     if(fs.existsSync(DataJSON)){
         fs.unlinkSync(DataJSON);
     }

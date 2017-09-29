@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+    <meta charset=utf-8 />
+    <title>JS Bin</title>
+
+    <link href="http://vjs.zencdn.net/4.2/video-js.css" rel="stylesheet">
+    <script src="http://vjs.zencdn.net/4.2/video.js"></script>
+
+</head>
+<body>
+
+<button href="#" id="0s">0s</button>
+<button href="#" id="10s">10s</button>
+<button href="#" id="20s">20s</button>
+
+<video id="my_video_1" class="video-js vjs-default-skin" controls autoplay loop muted preload="auto" width="640px" height="360px" data-setup='{}'>
+    <source id="mp4" src="data/logVideo.mp4" type='video/mp4'>
+</video>
+<video id="my_video_2" class="video-js vjs-default-skin" controls autoplay loop muted preload="auto" width="640px" height="360px" data-setup='{}'>
+    <source src="http://vjs.zencdn.net/v/oceans.mp4" type='video/mp4'>
+    <!--<source src="http://vjs.zencdn.net/v/oceans.webm" type='video/webm'>-->
+</video>
+
+<script>
+    var video2 = document.getElementById("my_video_2");
+    var video1 = document.getElementById("my_video_1");
+
+    var player = videojs('my_video_1');
+/*
+    var req = new XMLHttpRequest();
+    req.open('GET', 'data/logVideo.mp4', true);
+    req.responseType = 'blob';
+
+    req.onload = function() {
+        // Onload is triggered even on 404
+        // so we need to check the status code
+        if (this.status === 200) {
+            var videoBlob = this.response;
+            var vid = URL.createObjectURL(videoBlob); // IE10+
+            // Video is now downloaded
+            // and we can set it as source on the video element
+            video.src = vid;
+        }
+    }
+    req.onerror = function() {
+        // Error
+    }
+
+    req.send();
+*/
+    player.ready(function() {
+        console.log('player is ready');
+
+        $('#0s').click(function(e){
+            e.preventDefault();
+            player.currentTime(0);
+        });
+
+        $('#10s').click(function(e){
+            e.preventDefault();
+            player.currentTime(10);
+        });
+
+        $('#20s').click(function(e){
+            e.preventDefault();
+            player.currentTime(20);
+        });
+    });
+</script>
+</body>
+</html>

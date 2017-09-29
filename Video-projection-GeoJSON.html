@@ -3,6 +3,8 @@
     <head>
         <meta charset="UTF-8">
         <title> Video Projection </title>
+        <link href="http://vjs.zencdn.net/6.2.7/video-js.css" rel="stylesheet">
+        <script src="http://vjs.zencdn.net/6.2.7/video.js"></script>
         <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet/0.6.3/leaflet.css">
         <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js" integrity="sha512-A7vV8IFfih/D732iSSKi20u/ooOfj/AGehOKq0f4vLT1Zr2Y+RX7C+w8A1gaSasGtRUZpF/NZgzSAu4/Gc41Lg==" crossorigin=""></script>
         <link rel="stylesheet" type="text/css" href="css/logReplayStyle.css">
@@ -11,15 +13,16 @@
     <body onload=init()>
         <div id="map" style="position: absolute; top: 0; left: 0; width: 50%; height: 100%"></div>
         <div id="videoDiv" style="position: absolute; top: 0; left: 50%; width: 50%; height: 100%; z-index: 15; overflow: hidden; background: rgba(200,200,200,1)">
-            <video id="video" onclick=getCoords() autoplay loop muted style="display:block; margin: 0; width: 100%" src="data/logVideo.mp4"></video>
+            <video id="video" onclick=getCoords() autoplay loop muted preload="auto" style="display:block; margin: 0; width: 100%" src="data/logVideo.mp4"></video>
             <button onclick=pointP()>Point</button>
             <button onclick=lineP()>Line</button>
+            <button onclick=photoCenterLineOnOff()>Photocenter Line</button>
             <!--
             <button onclick=pointD()>Delete Points</button>
             <button onclick=lineD()>Delete Lines</button>
             -->
         </div>
-        <video id="myVideo" autoplay loop muted style="display:block; top: 0; left: 0; height: 100%; z-index: 10; opacity: 0.65" src="data/logVideo.mp4"></video>
+        <video id="myVideo" autoplay loop muted preload="auto" style="display:block; top: 0; left: 0; height: 100%; z-index: 10; opacity: 0.65" src="data/logVideo.mp4"></video>
         <div style="z-index: 15; position:absolute; bottom: 5px; left: 5px"><br>
             <svg width="200" height="135">
                 <rect width="200" height="135" fill="silver" stroke="black" stroke-width=".5"></rect>
@@ -74,6 +77,7 @@
            }
        }]
    };
+    var dataSetPhotoCenter, geoJsonPhotoCenter, photoCenterLineControl=0;
     var myStyle={
         "color": "#ffbb00",
         "weight": 4,
@@ -110,7 +114,7 @@
     function getCoords() {
         timeIndex++;
         timeVector.push(new Date().getTime());
-        videoCoords=[event.pageY,event.pageX-videoDiv.offsetLeft,0,1];
+        videoCoords=[event.clientY-videoDiv.offsetTop,event.clientX-videoDiv.offsetLeft,0,1];
         newData=transformGeoJson(p1.x,p1.y,p2.x,p2.y,p0.x,p0.y,p3.x,p3.y,videoCoords);
         newDataTxt=map.containerPointToLatLng(new L.Point(newData[1]+p1.x,newData[0]+p1.y));
         if (linePointSelector==1 && pointControl==1) {
@@ -154,13 +158,32 @@
         geoJsonLineString.clearLayers();
         map.removeLayer(geoJsonLineString);
         dataSetLineString.features[0]={};
-   }
+    }
+    function photoCenterLineOnOff() {
+        if (photoCenterLineControl===0){
+            geoJsonPhotoCenter=L.geoJSON(dataSetPhotoCenter,{
+                style: {
+                    "color": "#ffbb00",
+                    "weight": 4,
+                    "opacity": 1,
+                    "fillOpacity": 0
+                }
+            }).addTo(map);
+            photoCenterLineControl=1;
+        } else {
+            geoJsonPhotoCenter.clearLayers();
+            photoCenterLineControl=0;
+        }
+    }
     function init() {
-        $.get("data/logJson2.json",function (datamon) {
+        $.get("data/photoCenterLineJson.json",function (datamon) {
+            dataSetPhotoCenter=datamon;
+        });
+        $.get("data/logJson.json",function (datamon) {
             data=datamon.features;
             t0=data[0].TimeUS/1000;
             animate(data);
-       });
+        });
    }
     function animate(data){
         var coordinates0=data[0].geometry.coordinates[0];
@@ -218,11 +241,21 @@
            }
        }
         //l++
-        document.getElementById("horaTextHub").innerHTML=toHHMMSS(video.currentTime);
+        document.getElementById("horaTextHub").innerHTML=toHHMMSS(myVideo.currentTime);
         //document.getElementById("horaTextHub").innerHTML=toHHMMSS((data[l].TimeUS-data[0].TimeUS)/1000000);
         return l;
    }
     function transform2D(elt,x1,y1,x2,y2,x3,y3,x4,y4) {
+        /*
+        elt.style["-webkit-transform-origin"]="left top";
+        elt.style["-moz-transform-origin"]="left top";
+        elt.style["-o-transform-origin"]="left top";
+        elt.style.transformOrigin="left top";
+        */
+        elt.style["-webkit-transform-origin"]="0 0";
+        elt.style["-moz-transform-origin"]="0 0";
+        elt.style["-o-transform-origin"]="0 0";
+        elt.style.transformOrigin="0 0";
         var w=elt.videoWidth,h=elt.videoHeight;
         t=general2DProjection(0,0,x1,y1,w,0,x2,y2,0,h,x3,y3,w,h,x4,y4);
         for (var i=0;i<9;++i) t[i]=t[i]/t[8];
@@ -235,10 +268,6 @@
         elt.style["-moz-transform"]=tTransform;
         elt.style["-o-transform"]=tTransform;
         elt.style.transform=tTransform;
-        elt.style["-webkit-transform-origin"]="left top";
-        elt.style["-moz-transform-origin"]="left top";
-        elt.style["-o-transform-origin"]="left top";
-        elt.style.transformOrigin="left top";
    }
     function transformGeoJson(x1,y1,x2,y2,x3,y3,x4,y4,videoCoords) {
         var w=video.offsetWidth,h=video.offsetHeight;
