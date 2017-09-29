@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>D3.js Slider Examples</title>
+  <link rel="stylesheet" href="css/d3.slider.css" />
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="js/d3.slider.2.js"></script>
+  <style>
+    body {
+      font-family: Verdana,Arial,sans-serif;
+    }
+    h2 {
+      font-size: 1.2em;
+      margin: 60px 0 5px 0;
+    }
+    .wrapper {
+      width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .wrapper > div {
+      margin: 35px 0;
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <h2>Time range: <span id="slider3textmin"></span> - <span id="slider3textmax"></span></h2>
+  <div id="slider3"></div>
+</div>
+
+<script>
+    var div = document.getElementById('slider3');
+    var scale = d3.scaleLinear().domain( [ 0, 608399957 ] );
+    var axis = d3.axisTop(scale).ticks(10).tickFormat(function(d) { return usToHHMMSS(d) });
+    var value =[ 300000000, 500000000 ];
+    document.getElementById('slider3textmin').innerText=usToHHMMSS(scale.domain()[0]);
+    document.getElementById('slider3textmax').innerText=usToHHMMSS(scale.domain()[1]);
+
+    slider(div);
+
+    /*
+    d3.select('slider3').call(slider.scale(scale).axis(axis).value( [ 0, 608399957 ] ).on("slide", function(evt, value) {
+            d3.select('slider3textmin').call(slider.text(usToHHMMSS(value[ 0 ])));
+            d3.select('slider3textmax').call(slider.text(usToHHMMSS(value[ 1 ])));
+        }));
+    }
+    */
+
+    function usToHHMMSS(time) {
+        var sec_num=parseInt(time,10)/1000000; // don't forget the second param
+        var hours=Math.floor(sec_num/3600);
+        var minutes=Math.floor((sec_num-(hours*3600))/60);
+        var seconds=Math.floor(sec_num-(hours*3600)-(minutes*60));
+        if (hours<10) {hours="0"+hours;}
+        if (minutes<10) {minutes="0"+minutes;}
+        if (seconds<10) {seconds="0"+seconds;}
+        return hours+':'+minutes+':'+seconds;
+    }
+</script>
+
+</body>
+</html>
